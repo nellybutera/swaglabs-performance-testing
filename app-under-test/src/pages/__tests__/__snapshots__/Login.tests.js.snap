@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Login should render correctly 1`] = `
+<DocumentFragment>
+  <div
+    class="login_container"
+  >
+    <div
+      class="login_logo"
+    >
+      Swag Labs
+    </div>
+    <div
+      class="login_wrapper"
+      data-test="login-container"
+    >
+      <div
+        class="login_wrapper-inner"
+      >
+        <div
+          class="form_column"
+          id="login_button_container"
+        >
+          <div
+            class="login-box"
+          >
+            <form>
+              <div
+                class="form_group"
+              >
+                <input
+                  autocapitalize="none"
+                  autocorrect="off"
+                  class="input_error form_input"
+                  data-test="username"
+                  id="user-name"
+                  name="user-name"
+                  placeholder="Username"
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="form_group"
+              >
+                <input
+                  autocapitalize="none"
+                  autocorrect="off"
+                  class="input_error form_input"
+                  data-test="password"
+                  id="password"
+                  name="password"
+                  placeholder="Password"
+                  type="password"
+                  value=""
+                />
+              </div>
+              <div
+                class="error-message-container"
+              />
+              <input
+                class="submit-button btn_action"
+                data-test="login-button"
+                id="login-button"
+                name="login-button"
+                type="submit"
+                value="Login"
+              />
+            </form>
+          </div>
+        </div>
+      </div>
+      <div
+        class="login_credentials_wrap"
+        data-test="login-credentials-container"
+      >
+        <div
+          class="login_credentials_wrap-inner"
+        >
+          <div
+            class="login_credentials"
+            data-test="login-credentials"
+            id="login_credentials"
+          >
+            <h4>
+              Accepted usernames are:
+            </h4>
+            standard_user
+            <br />
+            locked_out_user
+            <br />
+            problem_user
+            <br />
+            performance_glitch_user
+            <br />
+            error_user
+            <br />
+            visual_user
+            <br />
+          </div>
+          <div
+            class="login_password"
+            data-test="login-password"
+          >
+            <h4>
+              Password for all users:
+            </h4>
+            secret_sauce
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

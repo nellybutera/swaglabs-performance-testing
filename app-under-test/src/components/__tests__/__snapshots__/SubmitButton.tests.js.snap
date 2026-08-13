@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`SubmitButton should render with a custom class 1`] = `
+<DocumentFragment>
+  <input
+    class="submit-button custom_class"
+    type="submit"
+    value="Submit"
+  />
+</DocumentFragment>
+`;
+
+exports[`SubmitButton should render with a testId 1`] = `
+<DocumentFragment>
+  <input
+    class="submit-button"
+    data-test="test-id"
+    id="test-id"
+    name="test-id"
+    type="submit"
+    value="Submit"
+  />
+</DocumentFragment>
+`;
+
+exports[`SubmitButton should render with a testId and a name prop 1`] = `
+<DocumentFragment>
+  <input
+    class="submit-button"
+    data-test="test-id"
+    id="test-id"
+    name="name-id"
+    type="submit"
+    value="Submit"
+  />
+</DocumentFragment>
+`;
+
+exports[`SubmitButton should render with custom props 1`] = `
+<DocumentFragment>
+  <input
+    bar="foo"
+    class="submit-button"
+    foo="bar"
+    type="submit"
+    value="Submit"
+  />
+</DocumentFragment>
+`;
+
+exports[`SubmitButton should render with default props 1`] = `
+<DocumentFragment>
+  <input
+    class="submit-button"
+    type="submit"
+    value="Submit"
+  />
+</DocumentFragment>
+`;

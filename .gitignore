@@ -1,0 +1,16 @@
+# Vendored app build output and deps (rebuilt by Docker, not needed in git)
+app-under-test/node_modules/
+app-under-test/build/
+
+# Raw .jtl result files: large, and superseded by EVIDENCE_CHECKSUMS.txt + the
+# committed HTML dashboards in reports/. Verify any shared .jtl against the
+# checksums file rather than trusting it blindly.
+results/*.jtl
+results/*.log
+
+# Claude Code session-local config, not part of the deliverable
+.claude/
+
+# Empty scratch dir JMeter's HTML dashboard generator (-e -o) creates as a side
+# effect; harmless, not worth committing
+temp/

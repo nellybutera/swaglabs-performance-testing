@@ -1,0 +1,63 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Swag Labs Sample App Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    env:
+      BUILD_PREFIX: true
+      IS_MAIN: ${{ github.ref == 'refs/heads/main' }}
+      SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+      SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v7
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # Site Testing steps
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build
+      run: CI=false npm run build
+
+    - name: Run Unit Tests and generate coverage report
+      run: npm run test.coverage
+
+    # Only run the last 2 steps when we are not on the main branch
+    - name: Install Playwright browsers
+      if: ${{ !env.IS_MAIN }}
+      run: npx playwright install --with-deps chromium firefox webkit
+
+    - name: Run Storybook visual tests
+      if: ${{ !env.IS_MAIN }}
+      run: npm run test.storybook
+
+    - name: Install test dependencies
+      run: npm --prefix ./test/e2e install
+
+    - name: Build the site
+      run: npm run build
+
+    - name: Build and E2E test the site
+      run: npm run preview & npx wait-on --timeout 60000 http://localhost:3000 && npm --prefix ./test/e2e run test.saucelabs.us

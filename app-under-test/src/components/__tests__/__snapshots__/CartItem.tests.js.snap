@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`InventoryListItem should render with default props 1`] = `
+<DocumentFragment>
+  <div
+    class="cart_item"
+    data-test="inventory-item"
+  >
+    <div
+      class="cart_quantity"
+      data-test="item-quantity"
+    >
+      1
+    </div>
+    <div
+      class="cart_item_label"
+    >
+      <a
+        data-test="item-1-title-link"
+        href="#"
+        id="item_1_title_link"
+      >
+        <div
+          class="inventory_item_name"
+          data-test="inventory-item-name"
+        >
+          Swag Item name
+        </div>
+      </a>
+      <div
+        class="inventory_item_desc"
+        data-test="inventory-item-desc"
+      >
+        Swag Item description
+      </div>
+      <div
+        class="item_pricebar"
+      >
+        <div
+          class="inventory_item_price"
+          data-test="inventory-item-price"
+        >
+          $9.99
+        </div>
+        <button
+          class="btn btn_secondary btn_small cart_button"
+          data-test="remove-swag-item-name"
+          id="remove-swag-item-name"
+          name="remove-swag-item-name"
+        >
+          Remove
+        </button>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InventoryListItem should render with no item 1`] = `
+<DocumentFragment>
+  <div
+    class="removed_cart_item"
+  />
+</DocumentFragment>
+`;

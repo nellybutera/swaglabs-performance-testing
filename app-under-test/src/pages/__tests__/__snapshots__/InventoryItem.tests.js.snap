@@ -1,0 +1,836 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`InventoryItem should render with BrokenComponent for an error user 1`] = `
+<DocumentFragment>
+  <div
+    id="page_wrapper"
+  >
+    <div
+      id="contents_wrapper"
+    >
+      <div
+        class="header_container inventory_details"
+        data-test="header-container"
+        id="header_container"
+      >
+        <div
+          class="primary_header"
+          data-test="primary-header"
+        >
+          <div
+            id="menu_button_container"
+          >
+            <div>
+              <div>
+                <div
+                  class="bm-burger-button"
+                  style="z-index: 1000;"
+                >
+                  <button
+                    id="react-burger-menu-btn"
+                    style="position: absolute; left: 0px; top: 0px; z-index: 1; width: 100%; height: 100%; margin: 0px; padding: 0px; font-size: 0px; background: transparent; cursor: pointer;"
+                    type="button"
+                  >
+                    Open Menu
+                  </button>
+                  <img
+                    alt="Open Menu"
+                    class="bm-icon"
+                    data-test="open-menu"
+                    src="test-file-stub"
+                    srcset="test-file-stub"
+                    style="width: 100%; height: 100%;"
+                  />
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                class="bm-menu-wrap"
+                id=""
+                style="position: fixed; right: inherit; z-index: 1100; width: 300px; height: 100%; -webkit-transform: translate3d(-100%, 0, 0); transform: translate3d(-100%, 0, 0); transition: all 0.5s;"
+              >
+                <div
+                  class="bm-menu"
+                  style="height: 100%; box-sizing: border-box; overflow: auto;"
+                >
+                  <nav
+                    class="bm-item-list"
+                    style="height: 100%;"
+                  >
+                    <a
+                      class="bm-item menu-item"
+                      data-test="inventory-sidebar-link"
+                      href="#"
+                      id="inventory_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      All Items
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="about-sidebar-link"
+                      href="https://saucelabs.com/"
+                      id="about_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      About
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="logout-sidebar-link"
+                      href="#"
+                      id="logout_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      Logout
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="reset-sidebar-link"
+                      href="#"
+                      id="reset_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      Reset App State
+                    </a>
+                  </nav>
+                </div>
+                <div>
+                  <div
+                    class="bm-cross-button"
+                    style="position: absolute; width: 24px; height: 24px; right: 8px; top: 8px;"
+                  >
+                    <button
+                      id="react-burger-cross-btn"
+                      style="position: absolute; left: 0px; top: 0px; z-index: 1; width: 100%; height: 100%; margin: 0px; padding: 0px; font-size: 0px; background: transparent; cursor: pointer;"
+                      tabindex="-1"
+                      type="button"
+                    >
+                      Close Menu
+                    </button>
+                    <img
+                      alt="Close Menu"
+                      class="bm-cross"
+                      data-test="close-menu"
+                      src="test-file-stub"
+                      srcset="test-file-stub"
+                      style="width: 100%; height: 100%;"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="header_label"
+          >
+            <div
+              class="app_logo"
+            >
+              Swag Labs
+            </div>
+          </div>
+          <div
+            class="shopping_cart_container"
+            id="shopping_cart_container"
+          >
+            <a
+              class="shopping_cart_link"
+              data-test="shopping-cart-link"
+            />
+          </div>
+        </div>
+        <div
+          class="header_secondary_container"
+          data-test="secondary-header"
+        >
+          <div
+            class="left_component"
+          >
+            <button
+              class="btn btn_secondary back btn_large inventory_details_back_button"
+              data-test="back-to-products"
+              id="back-to-products"
+              name="back-to-products"
+            >
+              <img
+                alt="Go back"
+                class="back-image"
+                src="test-file-stub"
+              />
+              Back to products
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="inventory_item_container"
+        data-test="inventory-container"
+        id="inventory_item_container"
+      >
+        <div
+          class="inventory_details"
+        >
+          <div
+            class="inventory_details_container"
+            data-test="inventory-item"
+          >
+            <div
+              class="inventory_details_img_container"
+            >
+              <img
+                alt="Sauce Labs Backpack"
+                class="inventory_details_img"
+                data-test="item-sauce-labs-backpack-img"
+              />
+            </div>
+            <div
+              class="inventory_details_desc_container"
+            >
+              <div
+                class="inventory_details_name large_size"
+                data-test="inventory-item-name"
+              >
+                Sauce Labs Backpack
+              </div>
+              <div
+                class="inventory_details_desc large_size"
+                data-test="inventory-item-desc"
+              >
+                A description should be here, but it failed to render! This error has been reported to Backtrace.
+              </div>
+              <div
+                class="inventory_details_price"
+                data-test="inventory-item-price"
+              >
+                $29.99
+              </div>
+              <button
+                class="btn btn_primary btn_small btn_inventory"
+                data-test="add-to-cart"
+                id="add-to-cart"
+                name="add-to-cart"
+              >
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer
+      class="footer"
+      data-test="footer"
+    >
+      <ul
+        class="social"
+      >
+        <li
+          class="social_twitter"
+        >
+          <a
+            data-test="social-twitter"
+            href="https://twitter.com/saucelabs"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Twitter
+          </a>
+        </li>
+        <li
+          class="social_facebook"
+        >
+          <a
+            data-test="social-facebook"
+            href="https://www.facebook.com/saucelabs"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Facebook
+          </a>
+        </li>
+        <li
+          class="social_linkedin"
+        >
+          <a
+            data-test="social-linkedin"
+            href="https://www.linkedin.com/company/sauce-labs/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            LinkedIn
+          </a>
+        </li>
+      </ul>
+      <div
+        class="footer_copy"
+        data-test="footer-copy"
+      >
+        © 2026 Sauce Labs. All Rights Reserved. Terms of Service | Privacy Policy
+      </div>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InventoryItem should render with default props 1`] = `
+<DocumentFragment>
+  <div
+    id="page_wrapper"
+  >
+    <div
+      id="contents_wrapper"
+    >
+      <div
+        class="header_container inventory_details"
+        data-test="header-container"
+        id="header_container"
+      >
+        <div
+          class="primary_header"
+          data-test="primary-header"
+        >
+          <div
+            id="menu_button_container"
+          >
+            <div>
+              <div>
+                <div
+                  class="bm-burger-button"
+                  style="z-index: 1000;"
+                >
+                  <button
+                    id="react-burger-menu-btn"
+                    style="position: absolute; left: 0px; top: 0px; z-index: 1; width: 100%; height: 100%; margin: 0px; padding: 0px; font-size: 0px; background: transparent; cursor: pointer;"
+                    type="button"
+                  >
+                    Open Menu
+                  </button>
+                  <img
+                    alt="Open Menu"
+                    class="bm-icon"
+                    data-test="open-menu"
+                    src="test-file-stub"
+                    srcset="test-file-stub"
+                    style="width: 100%; height: 100%;"
+                  />
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                class="bm-menu-wrap"
+                id=""
+                style="position: fixed; right: inherit; z-index: 1100; width: 300px; height: 100%; -webkit-transform: translate3d(-100%, 0, 0); transform: translate3d(-100%, 0, 0); transition: all 0.5s;"
+              >
+                <div
+                  class="bm-menu"
+                  style="height: 100%; box-sizing: border-box; overflow: auto;"
+                >
+                  <nav
+                    class="bm-item-list"
+                    style="height: 100%;"
+                  >
+                    <a
+                      class="bm-item menu-item"
+                      data-test="inventory-sidebar-link"
+                      href="#"
+                      id="inventory_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      All Items
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="about-sidebar-link"
+                      href="https://saucelabs.com/"
+                      id="about_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      About
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="logout-sidebar-link"
+                      href="#"
+                      id="logout_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      Logout
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="reset-sidebar-link"
+                      href="#"
+                      id="reset_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      Reset App State
+                    </a>
+                  </nav>
+                </div>
+                <div>
+                  <div
+                    class="bm-cross-button"
+                    style="position: absolute; width: 24px; height: 24px; right: 8px; top: 8px;"
+                  >
+                    <button
+                      id="react-burger-cross-btn"
+                      style="position: absolute; left: 0px; top: 0px; z-index: 1; width: 100%; height: 100%; margin: 0px; padding: 0px; font-size: 0px; background: transparent; cursor: pointer;"
+                      tabindex="-1"
+                      type="button"
+                    >
+                      Close Menu
+                    </button>
+                    <img
+                      alt="Close Menu"
+                      class="bm-cross"
+                      data-test="close-menu"
+                      src="test-file-stub"
+                      srcset="test-file-stub"
+                      style="width: 100%; height: 100%;"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="header_label"
+          >
+            <div
+              class="app_logo"
+            >
+              Swag Labs
+            </div>
+          </div>
+          <div
+            class="shopping_cart_container"
+            id="shopping_cart_container"
+          >
+            <a
+              class="shopping_cart_link"
+              data-test="shopping-cart-link"
+            />
+          </div>
+        </div>
+        <div
+          class="header_secondary_container"
+          data-test="secondary-header"
+        >
+          <div
+            class="left_component"
+          >
+            <button
+              class="btn btn_secondary back btn_large inventory_details_back_button"
+              data-test="back-to-products"
+              id="back-to-products"
+              name="back-to-products"
+            >
+              <img
+                alt="Go back"
+                class="back-image"
+                src="test-file-stub"
+              />
+              Back to products
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="inventory_item_container"
+        data-test="inventory-container"
+        id="inventory_item_container"
+      >
+        <div
+          class="inventory_details"
+        >
+          <div
+            class="inventory_details_container"
+            data-test="inventory-item"
+          >
+            <div
+              class="inventory_details_img_container"
+            >
+              <img
+                alt="Sauce Labs Backpack"
+                class="inventory_details_img"
+                data-test="item-sauce-labs-backpack-img"
+              />
+            </div>
+            <div
+              class="inventory_details_desc_container"
+            >
+              <div
+                class="inventory_details_name large_size"
+                data-test="inventory-item-name"
+              >
+                Sauce Labs Backpack
+              </div>
+              <div
+                class="inventory_details_desc large_size"
+                data-test="inventory-item-desc"
+              >
+                carry.allTheThings() with the sleek, streamlined Sly Pack that melds uncompromising style with unequaled laptop and tablet protection.
+              </div>
+              <div
+                class="inventory_details_price"
+                data-test="inventory-item-price"
+              >
+                $29.99
+              </div>
+              <button
+                class="btn btn_primary btn_small btn_inventory"
+                data-test="add-to-cart"
+                id="add-to-cart"
+                name="add-to-cart"
+              >
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer
+      class="footer"
+      data-test="footer"
+    >
+      <ul
+        class="social"
+      >
+        <li
+          class="social_twitter"
+        >
+          <a
+            data-test="social-twitter"
+            href="https://twitter.com/saucelabs"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Twitter
+          </a>
+        </li>
+        <li
+          class="social_facebook"
+        >
+          <a
+            data-test="social-facebook"
+            href="https://www.facebook.com/saucelabs"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Facebook
+          </a>
+        </li>
+        <li
+          class="social_linkedin"
+        >
+          <a
+            data-test="social-linkedin"
+            href="https://www.linkedin.com/company/sauce-labs/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            LinkedIn
+          </a>
+        </li>
+      </ul>
+      <div
+        class="footer_copy"
+        data-test="footer-copy"
+      >
+        © 2026 Sauce Labs. All Rights Reserved. Terms of Service | Privacy Policy
+      </div>
+    </footer>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InventoryItem should render with error data if a not known product is opened 1`] = `
+<DocumentFragment>
+  <div
+    id="page_wrapper"
+  >
+    <div
+      id="contents_wrapper"
+    >
+      <div
+        class="header_container inventory_details"
+        data-test="header-container"
+        id="header_container"
+      >
+        <div
+          class="primary_header"
+          data-test="primary-header"
+        >
+          <div
+            id="menu_button_container"
+          >
+            <div>
+              <div>
+                <div
+                  class="bm-burger-button"
+                  style="z-index: 1000;"
+                >
+                  <button
+                    id="react-burger-menu-btn"
+                    style="position: absolute; left: 0px; top: 0px; z-index: 1; width: 100%; height: 100%; margin: 0px; padding: 0px; font-size: 0px; background: transparent; cursor: pointer;"
+                    type="button"
+                  >
+                    Open Menu
+                  </button>
+                  <img
+                    alt="Open Menu"
+                    class="bm-icon"
+                    data-test="open-menu"
+                    src="test-file-stub"
+                    srcset="test-file-stub"
+                    style="width: 100%; height: 100%;"
+                  />
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                class="bm-menu-wrap"
+                id=""
+                style="position: fixed; right: inherit; z-index: 1100; width: 300px; height: 100%; -webkit-transform: translate3d(-100%, 0, 0); transform: translate3d(-100%, 0, 0); transition: all 0.5s;"
+              >
+                <div
+                  class="bm-menu"
+                  style="height: 100%; box-sizing: border-box; overflow: auto;"
+                >
+                  <nav
+                    class="bm-item-list"
+                    style="height: 100%;"
+                  >
+                    <a
+                      class="bm-item menu-item"
+                      data-test="inventory-sidebar-link"
+                      href="#"
+                      id="inventory_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      All Items
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="about-sidebar-link"
+                      href="https://saucelabs.com/"
+                      id="about_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      About
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="logout-sidebar-link"
+                      href="#"
+                      id="logout_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      Logout
+                    </a>
+                    <a
+                      class="bm-item menu-item"
+                      data-test="reset-sidebar-link"
+                      href="#"
+                      id="reset_sidebar_link"
+                      style="display: block;"
+                      tabindex="-1"
+                    >
+                      Reset App State
+                    </a>
+                  </nav>
+                </div>
+                <div>
+                  <div
+                    class="bm-cross-button"
+                    style="position: absolute; width: 24px; height: 24px; right: 8px; top: 8px;"
+                  >
+                    <button
+                      id="react-burger-cross-btn"
+                      style="position: absolute; left: 0px; top: 0px; z-index: 1; width: 100%; height: 100%; margin: 0px; padding: 0px; font-size: 0px; background: transparent; cursor: pointer;"
+                      tabindex="-1"
+                      type="button"
+                    >
+                      Close Menu
+                    </button>
+                    <img
+                      alt="Close Menu"
+                      class="bm-cross"
+                      data-test="close-menu"
+                      src="test-file-stub"
+                      srcset="test-file-stub"
+                      style="width: 100%; height: 100%;"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="header_label"
+          >
+            <div
+              class="app_logo"
+            >
+              Swag Labs
+            </div>
+          </div>
+          <div
+            class="shopping_cart_container"
+            id="shopping_cart_container"
+          >
+            <a
+              class="shopping_cart_link"
+              data-test="shopping-cart-link"
+            />
+          </div>
+        </div>
+        <div
+          class="header_secondary_container"
+          data-test="secondary-header"
+        >
+          <div
+            class="left_component"
+          >
+            <button
+              class="btn btn_secondary back btn_large inventory_details_back_button"
+              data-test="back-to-products"
+              id="back-to-products"
+              name="back-to-products"
+            >
+              <img
+                alt="Go back"
+                class="back-image"
+                src="test-file-stub"
+              />
+              Back to products
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="inventory_item_container"
+        data-test="inventory-container"
+        id="inventory_item_container"
+      >
+        <div
+          class="inventory_details"
+        >
+          <div
+            class="inventory_details_container"
+            data-test="inventory-item"
+          >
+            <div
+              class="inventory_details_img_container"
+            >
+              <img
+                alt="ITEM NOT FOUND"
+                class="inventory_details_img"
+                data-test="item-item-not-found-img"
+              />
+            </div>
+            <div
+              class="inventory_details_desc_container"
+            >
+              <div
+                class="inventory_details_name large_size"
+                data-test="inventory-item-name"
+              >
+                ITEM NOT FOUND
+              </div>
+              <div
+                class="inventory_details_desc large_size"
+                data-test="inventory-item-desc"
+              >
+                We're sorry, but your call could not be completed as dialled.
+          Please check your number, and try your call again.
+          If you are in need of assistance, please dial 0 to be connected with an operator.
+          This is a recording.
+          4 T 1.
+              </div>
+              <div
+                class="inventory_details_price"
+                data-test="inventory-item-price"
+              >
+                $√-1
+              </div>
+              <button
+                class="btn btn_primary btn_small btn_inventory"
+                data-test="add-to-cart"
+                id="add-to-cart"
+                name="add-to-cart"
+              >
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer
+      class="footer"
+      data-test="footer"
+    >
+      <ul
+        class="social"
+      >
+        <li
+          class="social_twitter"
+        >
+          <a
+            data-test="social-twitter"
+            href="https://twitter.com/saucelabs"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Twitter
+          </a>
+        </li>
+        <li
+          class="social_facebook"
+        >
+          <a
+            data-test="social-facebook"
+            href="https://www.facebook.com/saucelabs"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Facebook
+          </a>
+        </li>
+        <li
+          class="social_linkedin"
+        >
+          <a
+            data-test="social-linkedin"
+            href="https://www.linkedin.com/company/sauce-labs/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            LinkedIn
+          </a>
+        </li>
+      </ul>
+      <div
+        class="footer_copy"
+        data-test="footer-copy"
+      >
+        © 2026 Sauce Labs. All Rights Reserved. Terms of Service | Privacy Policy
+      </div>
+    </footer>
+  </div>
+</DocumentFragment>
+`;

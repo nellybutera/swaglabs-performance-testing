@@ -1,0 +1,65 @@
+name: Performance smoke test
+
+# Smoke-level only, deliberately. See TEST_PLAN.md section 8: a shared GitHub
+# Actions runner cannot produce meaningful load/stress/endurance numbers (no control
+# over neighboring load, CPU/network throttling), so this pipeline runs the baseline
+# tier only (50 users, 1 iteration, ~15s) against a freshly built copy of the target,
+# purely as a regression check that the app still builds, serves, and the .jmx still
+# runs clean. The real load/stress/endurance numbers in FINAL_REPORT.md come from
+# local runs, documented with checksums in EVIDENCE_CHECKSUMS.txt.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build load-test target image
+        run: docker build -f app-under-test/Dockerfile.perf -t swaglabs-perf-target ./app-under-test
+
+      - name: Start load-test target
+        run: docker run -d --name swaglabs-perf-target -p 8080:80 swaglabs-perf-target
+
+      - name: Wait for target to be ready
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8080/ && exit 0
+            sleep 1
+          done
+          echo "target never came up"; exit 1
+
+      - name: Set up JMeter
+        run: |
+          curl -sL https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz -o jmeter.tgz
+          tar -xzf jmeter.tgz
+
+      - name: Run baseline tier (smoke-scale, see header comment)
+        run: |
+          apache-jmeter-5.6.3/bin/jmeter.sh -n -t jmeter/tier-baseline.jmx \
+            -l results-ci.jtl -j jmeter-ci.log \
+            -e -o report-ci
+
+      - name: Fail on any request failure
+        run: |
+          if grep -q ',false,' results-ci.jtl; then
+            echo "Smoke test recorded failed requests:"
+            grep ',false,' results-ci.jtl
+            exit 1
+          fi
+
+      - name: Upload HTML dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-smoke-report
+          path: report-ci/
+
+      - name: Show target logs on failure
+        if: failure()
+        run: docker logs swaglabs-perf-target

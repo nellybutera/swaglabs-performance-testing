@@ -1,0 +1,117 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`InputError should render an error input 1`] = `
+<DocumentFragment>
+  <div
+    class="form_group"
+  >
+    <input
+      class="input_error form_input error"
+      placeholder=""
+      type="text"
+      value=""
+    />
+    <svg
+      aria-hidden="true"
+      class="svg-inline--fa fa-circle-xmark error_icon"
+      data-icon="circle-xmark"
+      data-prefix="fas"
+      focusable="false"
+      role="img"
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"
+        fill="currentColor"
+      />
+    </svg>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InputError should render an input with a testId 1`] = `
+<DocumentFragment>
+  <div
+    class="form_group"
+  >
+    <input
+      class="input_error form_input"
+      data-test="some-id"
+      id="some-id"
+      name="some-id"
+      placeholder=""
+      type="text"
+      value=""
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InputError should render an input with custom props 1`] = `
+<DocumentFragment>
+  <div
+    class="form_group"
+  >
+    <input
+      class="input_error form_input"
+      data-test="some-id"
+      foo="bar"
+      id="some-id"
+      name="own-name-id"
+      placeholder=""
+      type="text"
+      value=""
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InputError should render an input with full props 1`] = `
+<DocumentFragment>
+  <div
+    class="form_group"
+  >
+    <input
+      class="input_error form_input"
+      data-test="some-id"
+      foo="bar"
+      id="some-id"
+      name="own-name-id"
+      placeholder="The placeholder"
+      type="text"
+      value="the value"
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InputError should render correctly with the required options 1`] = `
+<DocumentFragment>
+  <div
+    class="form_group"
+  >
+    <input
+      class="input_error form_input"
+      placeholder=""
+      type="text"
+      value=""
+    />
+  </div>
+</DocumentFragment>
+`;
+
+exports[`InputError should render secure input 1`] = `
+<DocumentFragment>
+  <div
+    class="form_group"
+  >
+    <input
+      class="input_error form_input"
+      placeholder=""
+      type="password"
+      value=""
+    />
+  </div>
+</DocumentFragment>
+`;

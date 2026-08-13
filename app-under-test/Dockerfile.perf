@@ -1,0 +1,22 @@
+# Load-test target build for the Performance Testing assignment.
+# Intentionally NOT the repo's own Dockerfile (that one installs Sauce Connect for
+# cloud e2e runs, not a servable build). This is a real production-shaped serve:
+# multi-stage build -> static nginx, not `vite preview`/`npm start` (dev servers'
+# throughput ceilings are dev-server artifacts, not representative of anything).
+#
+# Pinned versions (record these in TEST_PLAN.md verbatim):
+#   node:24.9.0-alpine  (matches .nvmrc)
+#   nginx:1.27-alpine
+
+FROM node:24.9.0-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:1.27-alpine
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.perf.conf /etc/nginx/conf.d/default.conf
+COPY nginx.perf.main.conf /etc/nginx/nginx.conf
+EXPOSE 80
