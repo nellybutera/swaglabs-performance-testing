@@ -98,13 +98,29 @@ see `TEST_PLAN.md` §4 for why matching this exactly wasn't worth the effort her
 |---|---|---|
 | Response time < 2s | Time-to-last-byte, static payload | **Met** at Baseline (18ms P95). Load/Stress/Endurance P95s are inflated by the connection-refused artifact, not representative of the app's real latency. |
 | Throughput 500 req/s | Static-asset delivery capacity | **Met** — 535 req/s at Load, 314-320 req/s at Stress/Endurance (successful requests only) |
-| Error rate ≤ 1% | Non-200s/failures actually reaching the app | **Met** — nginx itself recorded 0% errors at every tier tested |
+| Error rate ≤ 1% | Non-200s/failures actually reaching the app | **Not measurable in this environment.** The client-side error rate was 44-63% at 200+ concurrent (see "Connection-refused artifact" above), which would fail this target read at face value — but nginx's own logs show 0% errors received, so the target-side number this metric is actually asking about was never captured. This is an environment limitation, not a pass. |
+
+## Live monitoring (Grafana + InfluxDB)
+
+Beyond the static HTML dashboards, a `docker compose up -d` Grafana + InfluxDB
+stack is included for real-time observation of any run (`TEST_PLAN.md` §6a). It
+is not how the numbers in this report were produced — kept as a separate concern
+for a clean evidence chain — but demonstrates the same JMeter plans feeding a
+live metrics pipeline via a Backend Listener. Grafana was chosen over Allure
+(this author's usual reporting tool on functional-test repos) because this data
+is continuous time-series metrics, not per-test pass/fail — see `TEST_PLAN.md`
+§6a for the reasoning, including two real bugs hit and fixed while wiring it up.
+
+![Grafana dashboard, live data from a short demo run](grafana-dashboard.png)
 
 ## Deliverable file map
 
 - `TEST_PLAN.md` — full methodology, investigation narratives, decisions
 - `jmeter/tier-*.jmx` — five literal per-tier test plans
+- `jmeter/demo-live-monitoring.jmx` — separate demo file, not an evidence tier
 - `reports/<tier>/index.html` — HTML dashboard per run
 - `EVIDENCE_CHECKSUMS.txt` — SHA-256 of every raw `.jtl`
 - `.github/workflows/performance-smoke.yml` — CI (smoke-scale only, by design)
 - `app-under-test/` — vendored Swag Labs source + serving Dockerfile/nginx config
+- `docker-compose.yml`, `grafana/` — live monitoring stack
+- `grafana-dashboard.png` — screenshot of the working dashboard

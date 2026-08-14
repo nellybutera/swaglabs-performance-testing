@@ -2,7 +2,7 @@
 
 **Assignment:** [Performance Testing with JMeter](https://github.com/AmaliTech-Training-Academy/Quality-Assurance-Labs/blob/master/Performance%20Testing/Performance%20Testing%20with%20JMeter.md)
 **Author:** Nelly Butera (`nellybutera`)
-**Status:** Draft — in progress
+**Status:** Complete — all five tiers run, reported, and pushed
 
 ---
 
@@ -242,6 +242,66 @@ test-environment ceiling rather than an application finding, and fully diagnosin
 which layer is responsible was judged not worth the time against this assignment's
 actual deliverables.
 
+## 6a. Live monitoring stack (Grafana + InfluxDB)
+
+`docker-compose.yml` adds a Grafana + InfluxDB stack alongside the load-test target,
+for real-time observation of a run rather than only post-hoc HTML dashboards.
+**This is a separate concern from the five evidence tiers above** — none of the
+committed results in `FINAL_REPORT.md` / `EVIDENCE_CHECKSUMS.txt` were produced
+through this stack; they came from plain `jmeter -n -t ... -e -o` runs against the
+target container alone. Re-running an evidence tier through the Backend Listener
+would not invalidate the numbers, but it's kept separate for a clean chain of
+custody between "what happened" and "what's evidence of what happened."
+
+**Why Grafana and not Allure, for this project specifically:** a survey of this
+author's other repos (`api-testing`, `xyz-bank-automation`) shows an established,
+consistent Allure convention — but exclusively for *functional* test suites
+(RestAssured+JUnit5, Selenium+TestNG), reporting pass/fail per test case with
+Epic/Feature/Story/Severity annotations. That model doesn't fit a performance test:
+there's no per-test pass/fail here, only continuous time-series metrics (latency,
+throughput, error rate, active threads) across a run's duration. Grafana +
+InfluxDB, via JMeter's own `InfluxdbBackendListenerClient` Backend Listener, is the
+standard pairing for that shape of data and was chosen for fitness to the problem,
+not unfamiliarity with Allure.
+
+**Setup:**
+- `jmeter/tier-*.jmx` each carry a `BackendListener` writing to
+  `http://localhost:8086/write?db=jmeter` (InfluxDB 1.x line protocol via the
+  built-in HTTP sender), alongside the existing `ResultCollector` — added via the
+  same Node-script-patching approach as the earlier `Connection: close` header
+  (§6), not hand-edited XML.
+- `grafana/dashboards/jmeter-dashboard.json` — 6 panels (overall response time,
+  throughput, per-transaction P95, error count, active threads, network bytes),
+  auto-provisioned via `grafana/provisioning/`.
+- **A real bug was hit and fixed here too**, consistent with this project's
+  practice of validating every JMeter config change with a bounded run rather than
+  trusting it once it parses: the Backend Listener's required
+  `influxdbMetricsSender` parameter was initially omitted, causing a silent
+  `NullPointerException` inside `Class.forName(null)` on test start (found by
+  reading the listener's own compiled bytecode via `javap`, since the shipped
+  Javadoc doesn't document this parameter as required). Fixed by adding it with the
+  correct value (`org.apache.jmeter.visualizers.backend.influxdb.HttpMetricsSender`)
+  and re-validating with a 30s bounded run before trusting it.
+- **A second real bug was hit and fixed**: the dashboard JSON originally referenced
+  the datasource as `${DS_INFLUXDB-JMETER}` — Grafana's dashboard-*export* template
+  variable syntax, which only resolves during the import wizard and is meaningless
+  in a directly-provisioned dashboard. Every panel silently showed "No data" as a
+  result. Fixed by pinning a stable `uid: influxdb-jmeter` on the datasource in
+  `grafana/provisioning/datasources/influxdb.yml` and referencing that UID directly
+  in every panel/target `datasource` field. Caught by actually opening the
+  dashboard and looking at it (a real headless-browser screenshot showed the "No
+  data" state), not by assuming a well-formed JSON file worked.
+- `grafana-dashboard.png` — a screenshot confirming the fix, taken from a short
+  **demo** run (`jmeter/demo-live-monitoring.jmx`, deliberately not one of the five
+  named tier files, so there's no ambiguity about which run produced it) against
+  the same local target.
+
+**Usage:** `docker compose up -d`, then any `jmeter -n -t jmeter/tier-*.jmx ...`
+run will stream live metrics to `http://localhost:3000` (dashboard
+auto-provisioned, anonymous viewer access enabled for convenience in this
+local-only training-assignment context — not a pattern to carry into anything
+with real access-control requirements).
+
 ## 7. Threshold reinterpretation
 
 | Brief's metric | Literal meaning (assumes backend logic) | This AUT's actual meaning |
@@ -276,11 +336,18 @@ in place of one, per the same convention used on the Entra project.
 - `TEST_PLAN.md` — this file
 - `app-under-test/` — vendored Swag Labs source + `Dockerfile.perf` /
   `nginx.perf.conf` / `nginx.perf.main.conf`
-- `jmeter/` — five literal `.jmx` files, one per tier (§6, §8)
+- `jmeter/tier-*.jmx` — five literal evidence-tier test plans (§6, §8)
+- `jmeter/demo-live-monitoring.jmx` — separate demo file for the Grafana
+  screenshot, not an evidence tier (§6a)
 - `reports/<tier>/` — HTML dashboard per run
 - `EVIDENCE_CHECKSUMS.txt` — SHA-256 of raw `.jtl` result files
-- `FINAL_REPORT.md` — summary across all tiers (written after runs complete)
-- `.github/workflows/` — CI (smoke-level only; see that file for why)
+- `FINAL_REPORT.md` — summary across all tiers
+- `.github/workflows/` — CI (smoke-level only; see that file for why). On push to
+  `main`, also publishes `reports/` plus a fresh CI-run baseline report to
+  GitHub Pages, via `pages/index.html` (landing page, no Allure — see README.md)
+- `docker-compose.yml`, `grafana/` — live monitoring stack (§6a), separate from
+  the evidence tiers
+- `grafana-dashboard.png` — screenshot proving the monitoring stack works
 
 ## 11. Change log
 
@@ -290,3 +357,4 @@ in place of one, per the same convention used on the Entra project.
 | 2026-08-12 | Replaced the single parametrized `.jmx` with five literal per-tier files after two separate unbounded-run incidents (§6) |
 | 2026-08-12 | Reduced endurance tier from 30 min to 10 min (§8) |
 | 2026-08-13 | Investigated and documented the load-tier connection-refused finding; `Connection: close` fix attempted and did not resolve it (§6) |
+| 2026-08-13/14 | Added Grafana + InfluxDB live-monitoring stack (§6a); fixed two real bugs along the way (missing Backend Listener parameter causing a silent NPE; a dashboard-export-only template variable causing every panel to show "No data") — both caught by validating rather than assuming, per this project's established practice |

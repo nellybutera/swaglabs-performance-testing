@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Swag Labs - Endurance (200 users, 10 min steady-state)" enabled="true">
-      <stringProp name="TestPlan.comments">Endurance tier. 200 concurrent users (load-tier concurrency), 60s ramp, 600s
-(10 min) steady-state, against the local Docker target. Reduced from an originally
-planned 30 minutes: a memory/fd leak in nginx serving static files is the least likely
-finding in this whole plan, and two runaway incidents already spent the time budget
-this tier's extra duration would have bought. See TEST_PLAN.md section 8. This file's
-Thread Group values are literal, not parametrized -- see the Loop Controller and
-scheduler comments below for why.</stringProp>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="DEMO - Live monitoring (NOT an evidence tier)" enabled="true">
+      <stringProp name="TestPlan.comments">Demo file only, for populating the Grafana dashboard (grafana/dashboards/) with
+real data to screenshot. NOT one of the five evidence tiers in TEST_PLAN.md section 8
+-- deliberately kept separate and distinctly named so there is no ambiguity about
+which runs produced the committed results in FINAL_REPORT.md / EVIDENCE_CHECKSUMS.txt.
+Same 50-user/1-iteration shape as tier-baseline.jmx, reused here only because it is
+short.</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -68,10 +67,10 @@ scheduler comments below for why.</stringProp>
                "5 threads, 1 loop" dry run ran for about 3 hours against the local
                container before being caught and killed. -->
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">-1</stringProp>
+          <stringProp name="LoopController.loops">1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">200</stringProp>
-        <stringProp name="ThreadGroup.ramp_time">60</stringProp>
+        <stringProp name="ThreadGroup.num_threads">50</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">10</stringProp>
         <!-- scheduler is a boolProp: unlike stringProp, JMeter's BooleanProperty does
              NOT evaluate dollar-brace-P function syntax, it parses the raw literal
              string, so any non literal "true" value here silently becomes false, and
@@ -81,7 +80,7 @@ scheduler comments below for why.</stringProp>
              35 minutes before being caught and killed. Always literal true here, never
              parametrized. -->
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
-        <stringProp name="ThreadGroup.duration">600</stringProp>
+        <stringProp name="ThreadGroup.duration">120</stringProp>
         <stringProp name="ThreadGroup.delay">0</stringProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
       </ThreadGroup>

@@ -7,12 +7,21 @@ name: Performance smoke test
 # purely as a regression check that the app still builds, serves, and the .jmx still
 # runs clean. The real load/stress/endurance numbers in FINAL_REPORT.md come from
 # local runs, documented with checksums in EVIDENCE_CHECKSUMS.txt.
+#
+# On push to main, this also publishes the committed HTML dashboards (reports/) plus
+# the fresh CI smoke-run report to GitHub Pages, alongside a small landing page
+# (pages/index.html). Plain JMeter HTML reports, not Allure -- see README.md for why.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   smoke:
@@ -43,7 +52,7 @@ jobs:
         run: |
           apache-jmeter-5.6.3/bin/jmeter.sh -n -t jmeter/tier-baseline.jmx \
             -l results-ci.jtl -j jmeter-ci.log \
-            -e -o report-ci
+            -e -o ci-smoke-report
 
       - name: Fail on any request failure
         run: |
@@ -53,13 +62,39 @@ jobs:
             exit 1
           fi
 
-      - name: Upload HTML dashboard
+      - name: Upload HTML dashboard (build artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: jmeter-smoke-report
-          path: report-ci/
+          path: ci-smoke-report/
 
       - name: Show target logs on failure
         if: failure()
         run: docker logs swaglabs-perf-target
+
+      - name: Assemble Pages site
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          mkdir -p site
+          cp pages/index.html site/
+          cp -r reports site/reports
+          cp -r ci-smoke-report site/ci-smoke
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy-pages:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: smoke
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

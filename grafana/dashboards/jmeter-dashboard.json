@@ -1,0 +1,119 @@
+{
+  "title": "Swag Labs JMeter Live Monitoring",
+  "uid": "swaglabs-jmeter",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Response Time (ms) — overall",
+      "description": "avg / p90 / p95 / p99 across all samplers, from the InfluxDB Backend Listener's 'all' transaction rollup (statut=all). Field names (avg, pct90.0, etc.) are the listener's actual InfluxDB schema, confirmed by querying InfluxDB directly, not assumed.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+          "query": "SELECT mean(\"avg\") AS \"avg\", mean(\"pct90.0\") AS \"p90\", mean(\"pct95.0\") AS \"p95\", mean(\"pct99.0\") AS \"p99\" FROM \"jmeter\" WHERE \"transaction\" = 'all' AND \"statut\" = 'all' AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Throughput (samples/sec, approx)",
+      "description": "mean(count)/5, assuming the Backend Listener's default 5s flush interval (backend_influxdb.send_interval). This is a proxy for req/s, not the authoritative throughput number -- see FINAL_REPORT.md for that.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+          "query": "SELECT mean(\"count\")/5 AS \"throughput\" FROM \"jmeter\" WHERE \"transaction\" = 'all' AND \"statut\" = 'all' AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Response Time by transaction (P95, ms)",
+      "description": "Per-transaction P95 -- the five named flows (01 Login .. 05 Checkout Step One). Confirms whether any one flow is disproportionately slow.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+          "query": "SELECT mean(\"pct95.0\") AS \"p95\" FROM \"jmeter\" WHERE \"statut\" = 'all' AND \"transaction\" != 'all' AND \"transaction\" != 'internal' AND $timeFilter GROUP BY time($__interval), \"transaction\" fill(null)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Error count (countError)",
+      "description": "Failed samples per flush interval, statut=all rollup. See TEST_PLAN.md section 6 before reading a nonzero value here as an application finding -- the connection-refused artifact investigated there applies to any run through this stack too.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+          "query": "SELECT mean(\"countError\") AS \"errors\" FROM \"jmeter\" WHERE \"transaction\" = 'all' AND \"statut\" = 'all' AND $timeFilter GROUP BY time($__interval) fill(0)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Active threads (mean)",
+      "description": "From the listener's internal pseudo-transaction row (transaction=internal), field meanAT.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+          "query": "SELECT mean(\"meanAT\") AS \"active_threads\" FROM \"jmeter\" WHERE \"transaction\" = 'internal' AND $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Network bytes (received + sent)",
+      "description": "rb (received bytes) and sb (sent bytes), overall rollup, per flush interval.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "influxdb-jmeter" },
+          "query": "SELECT mean(\"rb\") AS \"received\", mean(\"sb\") AS \"sent\" FROM \"jmeter\" WHERE \"transaction\" = 'all' AND \"statut\" = 'all' AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ]
+    }
+  ]
+}
