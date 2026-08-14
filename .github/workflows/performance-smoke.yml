@@ -78,6 +78,7 @@ jobs:
         run: |
           mkdir -p site
           cp pages/index.html site/
+          cp grafana-dashboard.png site/
           cp -r reports site/reports
           cp -r ci-smoke-report site/ci-smoke
 

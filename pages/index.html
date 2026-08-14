@@ -5,56 +5,118 @@
 <title>Swag Labs Performance Test Reports</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, -apple-system, sans-serif; max-width: 760px; margin: 2.5rem auto; padding: 0 1.25rem; line-height: 1.5; }
-  h1 { font-size: 1.5rem; }
-  p.lede { color: #666; }
-  ul { list-style: none; padding: 0; }
-  li { margin: 0.6rem 0; }
-  a.card { display: block; border: 1px solid #ccc; border-radius: 8px; padding: 0.9rem 1.1rem; text-decoration: none; color: inherit; }
-  a.card:hover { border-color: #888; }
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --border: #ddd;
+    --card-bg: #fafafa; --accent: #2563eb; --ok-bg: #ecfdf5; --ok-fg: #047857;
+    --code-bg: rgba(0,0,0,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #30363d;
+      --card-bg: #161b22; --accent: #58a6ff; --ok-bg: #04260f; --ok-fg: #3fb950;
+      --code-bg: rgba(255,255,255,0.08);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    max-width: 860px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem;
+    line-height: 1.55; background: var(--bg); color: var(--fg);
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  p.lede { color: var(--muted); margin-top: 0; }
+  .banner {
+    background: var(--ok-bg); color: var(--ok-fg); border-radius: 8px;
+    padding: 0.7rem 1rem; font-size: 0.9rem; margin: 1.25rem 0 2rem;
+  }
+  h2 { font-size: 1.1rem; margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  .grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; }
+  a.card {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px;
+    padding: 0.9rem 1.1rem; text-decoration: none; color: inherit;
+  }
+  a.card:hover { border-color: var(--accent); }
   a.card .tier { font-weight: 600; }
-  a.card .desc { font-size: 0.9rem; color: #666; display: block; margin-top: 0.15rem; }
-  footer { margin-top: 2.5rem; font-size: 0.85rem; color: #888; }
-  code { background: rgba(127,127,127,0.15); padding: 0.1rem 0.35rem; border-radius: 4px; }
+  a.card .desc { font-size: 0.85rem; color: var(--muted); display: block; margin-top: 0.2rem; }
+  a.card .when { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+  .grafana-note {
+    font-size: 0.9rem; color: var(--muted); background: var(--card-bg);
+    border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem;
+  }
+  .grafana-note img { max-width: 100%; border-radius: 6px; margin-top: 0.75rem; display: block; }
+  footer { margin-top: 3rem; font-size: 0.85rem; color: var(--muted); }
+  code { background: var(--code-bg); padding: 0.1rem 0.35rem; border-radius: 4px; }
+  a { color: var(--accent); }
 </style>
 </head>
 <body>
   <h1>Swag Labs Performance Test Reports</h1>
-  <p class="lede">JMeter HTML dashboards for each test tier. See
+  <p class="lede">JMeter HTML dashboards, one per test tier. See
   <a href="https://github.com/nellybutera/swaglabs-performance-testing">the repo</a>
   for <code>TEST_PLAN.md</code> and <code>FINAL_REPORT.md</code> — read those first,
   the numbers here don't mean what they look like without that context.</p>
 
-  <ul>
-    <li><a class="card" href="reports/baseline/">
-      <span class="tier">Baseline</span>
-      <span class="desc">50 users, 1 iteration — sanity check, 0% errors</span>
-    </a></li>
-    <li><a class="card" href="reports/load/">
-      <span class="tier">Load</span>
-      <span class="desc">200 concurrent, 5 min steady-state</span>
-    </a></li>
-    <li><a class="card" href="reports/stress/">
-      <span class="tier">Stress</span>
-      <span class="desc">500 concurrent, 5 min steady-state</span>
-    </a></li>
-    <li><a class="card" href="reports/endurance/">
-      <span class="tier">Endurance</span>
-      <span class="desc">200 concurrent, 10 min steady-state — no memory leak found</span>
-    </a></li>
-    <li><a class="card" href="reports/smoke-real-site/">
-      <span class="tier">Smoke (real saucedemo.com)</span>
-      <span class="desc">5 users — caught a real routing divergence, see TEST_PLAN.md §4</span>
-    </a></li>
-    <li><a class="card" href="ci-smoke/">
-      <span class="tier">Latest CI smoke run</span>
-      <span class="desc">Baseline tier, re-run on every push, from the freshest build</span>
-    </a></li>
-  </ul>
+  <div class="banner">
+    ✅ CI smoke test passing as of the latest push. The 5 reports below are from
+    fixed evidence runs (dates shown per card) — they don't change on every push;
+    only the "Latest CI smoke run" card does.
+  </div>
 
-  <footer>Built by <a href="https://github.com/nellybutera">nellybutera</a> &middot;
-  no Allure here — see the README for why Grafana + JMeter's own HTML reports fit
-  a performance test better than a functional-test reporting tool.</footer>
+  <h2>Evidence tier reports</h2>
+  <div class="grid">
+    <a class="card" href="reports/baseline/">
+      <span><span class="tier">Baseline</span>
+      <span class="desc">50 users, 1 iteration — 0% errors</span></span>
+      <span class="when">12 Aug, 12:07–12:08</span>
+    </a>
+    <a class="card" href="reports/load/">
+      <span><span class="tier">Load</span>
+      <span class="desc">200 concurrent, 5 min steady-state</span></span>
+      <span class="when">13 Aug, 10:17–10:22</span>
+    </a>
+    <a class="card" href="reports/stress/">
+      <span><span class="tier">Stress</span>
+      <span class="desc">500 concurrent, 5 min steady-state</span></span>
+      <span class="when">13 Aug, 10:34–10:39</span>
+    </a>
+    <a class="card" href="reports/endurance/">
+      <span><span class="tier">Endurance</span>
+      <span class="desc">200 concurrent, 10 min — no memory leak found</span></span>
+      <span class="when">13 Aug, 10:50–11:00</span>
+    </a>
+    <a class="card" href="reports/smoke-real-site/">
+      <span><span class="tier">Smoke — real saucedemo.com</span>
+      <span class="desc">5 users — caught a real routing divergence, see TEST_PLAN.md §4</span></span>
+      <span class="when">13 Aug, 11:11–11:12</span>
+    </a>
+  </div>
+
+  <h2>Continuous check</h2>
+  <div class="grid">
+    <a class="card" href="ci-smoke/">
+      <span><span class="tier">Latest CI smoke run</span>
+      <span class="desc">Baseline tier, rebuilt and re-run on every push to main</span></span>
+      <span class="when">always current</span>
+    </a>
+  </div>
+
+  <h2>Live Grafana monitoring</h2>
+  <div class="grafana-note">
+    Not hosted here — Grafana + InfluxDB run in Docker locally
+    (<code>docker compose up -d</code>, see the repo README) while a test is
+    running, so there's nothing static to publish. This is a screenshot from a
+    real local run, not a mockup:
+    <img src="grafana-dashboard.png" alt="Grafana dashboard showing live JMeter metrics: response time, throughput, per-transaction P95, error count, active threads, network bytes">
+  </div>
+
+  <footer>
+    Built by <a href="https://github.com/nellybutera">nellybutera</a> &middot;
+    no Allure here — see the
+    <a href="https://github.com/nellybutera/swaglabs-performance-testing#readme">README</a>
+    for why plain JMeter HTML reports + Grafana fit a performance test better than
+    a functional-test reporting tool.
+  </footer>
 </body>
 </html>
