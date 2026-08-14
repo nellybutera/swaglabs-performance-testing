@@ -14,3 +14,8 @@ results/*.log
 # Empty scratch dir JMeter's HTML dashboard generator (-e -o) creates as a side
 # effect; harmless, not worth committing
 temp/
+
+# JVM heap dumps from OOM crashes during diagnostic/scratch runs (e.g. the
+# connection-pool-exhaustion test in TEST_PLAN.md section 6b) -- large, not
+# evidence, never intentionally produced
+*.hprof

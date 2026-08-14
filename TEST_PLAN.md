@@ -2,7 +2,9 @@
 
 **Assignment:** [Performance Testing with JMeter](https://github.com/AmaliTech-Training-Academy/Quality-Assurance-Labs/blob/master/Performance%20Testing/Performance%20Testing%20with%20JMeter.md)
 **Author:** Nelly Butera (`nellybutera`)
-**Status:** Complete — all five tiers run, reported, and pushed
+**Status:** Complete, with an honest caveat — all five tiers run and reported,
+but the reported goal verdicts are "not verified" against the brief's targets,
+not "met." See §6b and `FINAL_REPORT.md`'s goal-by-goal verdict.
 
 ---
 
@@ -302,6 +304,79 @@ auto-provisioned, anonymous viewer access enabled for convenience in this
 local-only training-assignment context — not a pattern to carry into anything
 with real access-control requirements).
 
+## 6b. Corrected diagnosis of the connection-refused artifact (2026-08-14)
+
+**This section corrects and supersedes conclusions in §6 above. §6 is left
+unedited as a record of the original (incomplete) investigation** — per this
+project's practice of not silently rewriting past reasoning; read both to see
+how the finding evolved, not just the final answer.
+
+**What was wrong in §6:** the original investigation sampled a handful of
+failure lines with `head -5` / eyeballing and generalized from those to "the
+connection-refused artifact." Recomputing across *all* failures, correctly —
+using a real CSV parser instead of naive `awk -F','` (the `.jtl`'s
+`responseMessage` field is quoted and contains embedded commas, which breaks
+naive comma-splitting on a large fraction of rows) — shows the picture was
+both worse and more specific than reported:
+
+| Tier | `HttpHostConnectException` | `BindException` | `SocketTimeoutException` | Success rate |
+|---|---|---|---|---|
+| Load | 1,226 | **97,438** | 0 | 10.56% |
+| Stress | 29,410 | 9,902 | 1,343 | 15.81% |
+| Endurance | 1,632 | **54,612** | 0 | 23.24% |
+
+`BindException` — client-side ephemeral port exhaustion — dominates at Load
+and Endurance, not `HttpHostConnectException` as originally emphasized. This
+also means the throughput figures reported in the original `FINAL_REPORT.md`
+(535 req/s etc.) were wrong, not just optimistically framed: they came from
+`statistics.json`'s aggregate `throughput` field, which counts every sampler
+sub-sample (including embedded-resource requests that never left the client
+due to `BindException`) as if it were a completed request.
+
+**Hypothesis formed and tested:** given `BindException` is consistent with
+"a fresh TCP connection — and fresh ephemeral port — on every request," and
+this repo's own `Connection: close` header (added in §6, to fix a *different*
+problem) forces exactly that, the hypothesis was: **removing `Connection:
+close` should reduce `BindException` failures.**
+
+**Test method:** copied `tier-load.jmx` to a scratch file
+(not the committed evidence file), disabled the `Connection: close` Header
+Manager element, ran it standalone (5 min, same 200-concurrent/30s-ramp shape
+as the real Load tier), analyzed the result, then deleted the scratch file and
+its output. The evidence tier files were never touched by this test.
+
+**Result: hypothesis refuted.** Failures got dramatically worse, not better —
+success rate dropped from 10.56% to **0.56%** — and the dominant failure
+changed entirely, to `java.lang.IllegalStateException: Connection pool shut
+down` (1,427,481 of 1,435,639 transaction attempts). This is JMeter's own
+shared `HttpClient` connection pool being exhausted under 200 concurrent
+threads competing to reuse pooled connections — a different generator-side
+resource ceiling, not TCP ports. **Toggling keep-alive changes which
+generator-side resource gets exhausted; it doesn't fix the underlying
+problem, which is that a single JMeter instance on one laptop cannot sustain
+200+ concurrent HTTP connections to this target for multiple minutes without
+hitting some internal limit.**
+
+**Consequence for the `Connection: close` header still present in all 5
+evidence `.jmx` files:** left in place, deliberately, rather than removed
+based on this finding. Removing it would only trade one generator-side
+failure mode for a different, empirically worse one (0.56% vs 10.56% success)
+— not a fix. The header stays as an artifact of the original (also-flawed)
+investigation in §6, documented honestly rather than either defended or
+silently reverted. **Actually fixing this requires distributing load across
+multiple JMeter instances/machines and/or explicitly tuning JMeter's HTTP
+connection pool size** (`httpclient4.max_total`, `httpclient4.max_per_route`
+in `jmeter.properties`) — not a config toggle. Not done in this pass;
+recorded below as the top-priority open item, superseding the "bracket
+100/150" item as the more urgent next step.
+
+**What this means for the results in §8/`FINAL_REPORT.md`:** the Load,
+Stress, and Endurance numbers reflect this generator-side bottleneck, not a
+clean measurement of the application's real capacity. They should be read as
+"what happened when a single-laptop JMeter setup pushed 200-500 concurrent
+connections at this target," not as "what this application can handle" —
+`FINAL_REPORT.md`'s goal-by-goal verdict reflects this distinction.
+
 ## 7. Threshold reinterpretation
 
 | Brief's metric | Literal meaning (assumes backend logic) | This AUT's actual meaning |
@@ -358,3 +433,22 @@ in place of one, per the same convention used on the Entra project.
 | 2026-08-12 | Reduced endurance tier from 30 min to 10 min (§8) |
 | 2026-08-13 | Investigated and documented the load-tier connection-refused finding; `Connection: close` fix attempted and did not resolve it (§6) |
 | 2026-08-13/14 | Added Grafana + InfluxDB live-monitoring stack (§6a); fixed two real bugs along the way (missing Backend Listener parameter causing a silent NPE; a dashboard-export-only template variable causing every panel to show "No data") — both caught by validating rather than assuming, per this project's established practice |
+| 2026-08-14 | Corrected the connection-refused diagnosis after finding a CSV-parsing bug in the original analysis (§6b): the real dominant failure was `BindException` (client port exhaustion), not primarily `HttpHostConnectException`. Tested and refuted the resulting "remove `Connection: close`" hypothesis directly — it makes failures worse (0.56% success vs 10.56%), via a different generator-side exhaustion mode. Retracted the "Met" verdicts on Response Time and Throughput in `FINAL_REPORT.md` — both were computed from an aggregate stat that double-counted failed sub-samples as successes |
+
+## 12. Open items (highest priority first)
+
+1. **Fix the generator-side bottleneck** (§6b) — a single JMeter instance on
+   one laptop cannot sustain 200+ concurrent connections to this target for
+   multiple minutes without exhausting either its ephemeral ports or its own
+   HTTP connection pool. Needs distributed load generation (multiple JMeter
+   instances/machines) and/or explicit connection-pool sizing in
+   `jmeter.properties`, not a header toggle. Until this is fixed, none of the
+   Load/Stress/Endurance numbers in this repo represent the application's
+   real capacity — see `FINAL_REPORT.md`'s goal-by-goal verdict.
+2. **Re-run Load/Stress/Endurance** once the generator is fixed, and only
+   then treat the successful-request numbers as a real answer to the brief's
+   performance goals.
+3. **Bracket the actual break point** between 50 concurrent (clean) and 200
+   concurrent (generator-limited) — e.g. 100/150 — once the generator issue
+   no longer confounds the measurement. Without this there's no real answer
+   to the brief's Scalability goal.
