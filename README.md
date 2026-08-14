@@ -1,7 +1,7 @@
 # Swag Labs Performance Testing
 
 JMeter load testing of [Swag Labs](https://www.saucedemo.com/) — an AmaliTech
-Training Academy [Performance Testing](https://github.com/AmaliTech-Training-Academy/Quality-Assurance-Labs/blob/master/Performance%20Testing/Performance%20Testing%20with%20JMeter.md)
+Training Academy Performance Testing
 lab assignment.
 
 📊 **[View the HTML reports on GitHub Pages](https://nellybutera.github.io/swaglabs-performance-testing/)**
