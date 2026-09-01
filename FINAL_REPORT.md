@@ -3,27 +3,13 @@
 See `TEST_PLAN.md` for full methodology, scope reasoning, and the investigation
 narratives summarized here. This report is the results summary the brief asks for.
 
-**Correction notice (2026-08-14):** an earlier version of this report claimed
-the throughput and response-time goals were "Met," based on aggregate
-`statistics.json` numbers that treat every JMeter sub-sample (including failed
-connection attempts) as a data point. Recomputing from the raw `.jtl` files —
-counting only the five named transaction-controller samples, correctly parsing
-the CSV (an earlier pass here also had a bug: naive comma-splitting on a field
-that itself contains commas) — shows those claims were wrong. Corrected numbers
-and an honest goal-by-goal verdict are below. See `TEST_PLAN.md` §6b for the
-full account of what was miscounted and why.
-
-**Revision notice (2026-08-14, later same day):** the tier suite was rebuilt
-after the correction above: Load is now split into two literal tiers —
-**Load-Medium (150 users)** and **Load-Peak (300 users)** — matching the
-brief's "150 users, then 300 users" wording exactly instead of one 200-user
-compromise tier; and a Uniform Random Timer (1–3s "think time") was added
-between every request in all five `.jmx` files, closing a gap against the
-brief's "think time timers between requests" requirement that no tier had
-before. All numbers below are from that rebuilt suite, not the single-Load-tier
-run described in the original correction. One notable effect of adding think
-time: **Endurance's error rate dropped from 23.24% to 0.003%** — see "Endurance"
-below.
+**Note on this version:** the numbers below are from a rebuilt tier suite —
+Load split into literal **Load-Medium (150 users)** and **Load-Peak (300
+users)** tiers matching the brief's wording, and a 1–3s think-time timer added
+between every request in all five `.jmx` files. An earlier pass of this report
+miscounted throughput/response-time by including failed connection attempts as
+completed requests; that's fixed here too. Full history of both changes is in
+`TEST_PLAN.md` §6b and its git log, not repeated in this report.
 
 ## Executive summary
 
@@ -58,15 +44,9 @@ not every embedded-resource sub-sample:
 the same phenomenon as Load/Peak/Stress. Its latency figures reflect real
 internet round-trips to saucedemo.com, not the local target.
 
-**What changed since the last correction:** Load is now two literal tiers
-matching the brief's own wording ("150 users, then 300 users") instead of one
-200-user compromise tier, and a 1–3s Uniform Random Timer ("think time") now
-sits between every request in all five `.jmx` files — the brief's "think time
-timers between requests" requirement, which no earlier tier had. Success rates
-at Load-Medium/Load-Peak/Stress are all noticeably *better* than the old
-single-Load-tier's 10.56% (pacing requests instead of firing them back-to-back
-clearly helps), but still fall well short of the brief's ≤1% error target at
-150+ concurrent. **Endurance is the standout exception — see below.**
+Success rates at Load-Medium/Load-Peak/Stress are all better than the prior
+single-Load-tier's 10.56%, but still fall well short of the brief's ≤1% error
+target at 150+ concurrent. **Endurance is the exception — see below.**
 
 ## Baseline: clean pass
 
@@ -102,30 +82,20 @@ think time slows the *rate* of new connections per thread, but doesn't change
 how many threads are open at once, so at 150+ concurrent it reduces the
 problem without eliminating it.
 
-**Prior investigation on this repo's history, now understood more precisely:**
-- **nginx's own access/error logs showed zero errors across all runs.** Every
-  request that reached the application was served 200 — still true, and still
-  correctly rules out an application-side failure.
-- A one-shot burst of 1,000 concurrent `curl` requests succeeded 100% — also
-  still true, and consistent with `BindException`: a one-shot burst doesn't
-  hold 200+ connections open for minutes, so it never exhausts the port pool.
-- **Hypothesis tested, and refuted:** the theory was that the earlier
-  `Connection: close` fix (disabling keep-alive) was *causing* `BindException`
-  by forcing a fresh TCP connection — and a fresh ephemeral port — on every
-  single request. This was tested directly: the Load tier was re-run with
-  `Connection: close` disabled (keep-alive re-enabled), isolated in a scratch
-  copy of the test plan, not the committed evidence file. **Result: failures
-  got dramatically worse, not better** — success rate dropped from 10.56% to
-  **0.56%** — and the dominant failure changed to
-  `java.lang.IllegalStateException: Connection pool shut down` (1,427,481 of
-  1,435,639 attempts, essentially all of them). That is a *different*
-  generator-side problem: JMeter's own shared HTTP connection pool being
-  exhausted/torn down under 200 concurrent threads all trying to reuse pooled
-  connections, not TCP port exhaustion. So: keep-alive-off causes port
-  exhaustion, keep-alive-on causes connection-pool exhaustion — **the
-  generator hits a resource ceiling either way**, just a different one
-  depending on this setting. The original hypothesis (that `Connection:
-  close` was the root cause and removing it would fix things) is wrong.
+**Two supporting facts, still true on the current suite:** nginx's own
+access/error logs show zero errors across all runs — every request that
+reached the application was served 200, ruling out an application-side fault.
+And a one-shot burst of 1,000 concurrent `curl` requests succeeded 100%,
+consistent with `BindException`: a one-shot burst doesn't hold connections
+open for minutes, so it never exhausts the port pool.
+
+**From the prior 200-user tier (not re-tested on this suite):** disabling the
+`Connection: close` header, on the theory that forcing a fresh connection per
+request was the cause, made things worse, not better (success rate fell to
+0.56%, with the failure switching to `IllegalStateException: Connection pool
+shut down`). Keep-alive-off exhausts ports; keep-alive-on exhausts JMeter's own
+connection pool — the generator hits a ceiling either way. That's why
+`Connection: close` stays in all five `.jmx` files rather than being reverted.
 
 **Stress tier's failure mix is more mixed** (`BindException` and
 `HttpHostConnectException` at similar scale, plus the only `SocketTimeoutException`
@@ -149,13 +119,15 @@ investigation trail, including the refuted hypothesis, in `TEST_PLAN.md` §6b.
 Endurance (150 concurrent, 10 minutes, same think-time timer as every other
 tier) came back at **99.99% success — 1 failure out of 15,377 attempts** —
 down from **23.24%** in the previous, timer-less version of this same tier.
-This is the strongest evidence in this report that **realistic pacing between
-requests, not just concurrency level, is a major factor** in whether the test
-generator exhausts its own TCP ports: Endurance's 150 concurrent threads,
-spread out over 10 minutes with 1–3s think time each, never opened connections
-fast enough to hit the same wall that Load-Medium (also 150 concurrent, but a
-tighter 5-minute steady-state) still did. Concurrency alone doesn't predict
-the failure — sustained *connection-open rate* does.
+
+One observation worth flagging, not a settled conclusion: Endurance and
+Load-Medium are both 150 concurrent, yet Endurance stays almost entirely
+clean while Load-Medium fails 23.6% of the time. The two tiers differ in more
+than one way at once — ramp-up (60s vs 30s), steady-state duration (10 min vs
+5 min), and think time is present in both — so this is a single uncontrolled
+comparison, not an isolated variable. It's consistent with run *shape*
+(ramp-up speed, sustained connection-open rate) mattering as much as raw
+concurrency, but that's a hypothesis for a follow-up test, not a proven cause.
 
 Container memory before and after the run: ~18-22MB either way,
 no growth trend. No evidence of a memory leak in nginx serving static files over
@@ -188,7 +160,7 @@ that was wrong.
 | **Response time** | < 2s for critical transactions | **Not met at 150+ concurrent.** Baseline (50 users) is 71ms P95 — a sanity check, not a load test. Endurance (150 concurrent, sustained) is close but over at 7.6s P95; Load-Medium/Peak/Stress range 6.1–17.6s P95. |
 | **Throughput** | 500 req/s | **Not verified.** No defensible successful-only req/s figure has been computed for any tier; see "What would actually verify this" below. |
 | **Error rate** | ≤ 1% under max load | **Not met at Load-Medium/Peak/Stress** (8.4% / 30.2% / 21.5% failure). **Met at Endurance** — 0.003% failure at 150 concurrent sustained for 10 minutes, once think-time pacing was added. Confirmed not an application fault throughout (nginx logs clean) — the remaining failures trace to the test generator's own TCP port exhaustion, worse at higher concurrency and shorter/burstier ramp-ups. |
-| **Scalability** | Evaluate behavior under increasing load | **Informative, still not conclusive.** The 50→150→300→500 progression, now with a real 150-vs-300 data point, shows error rate is NOT monotonic with concurrency alone (Endurance at 150 outperforms Load-Medium also at 150) — pacing and run shape matter as much as headcount. But because the generator remains the bottleneck at 150+, this still isn't a clean read of the *application's* scalability. |
+| **Scalability** | Evaluate behavior under increasing load | **Informative, still not conclusive.** The 50→150→300→500 progression shows error rate isn't a clean function of concurrency alone — Endurance and Load-Medium are both 150 concurrent with very different results (see "Endurance" above) — but because the generator remains the bottleneck at 150+, this still isn't a clean read of the *application's* scalability. |
 
 ## What would actually verify these goals
 

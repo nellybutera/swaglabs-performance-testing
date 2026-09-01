@@ -75,7 +75,7 @@ docker compose up -d
 - A quick check against the real site was still run, just at low volume, and it
   actually caught something: the real site 404s on some direct links that the
   local copy doesn't (details in `TEST_PLAN.md`).
-- One run showed a scary ~90% "error rate" at higher concurrency. It turned out
-  the app server logged zero errors the whole time — the failures were happening
-  somewhere else in the test setup, not in the app. That's written up honestly
-  in `TEST_PLAN.md` instead of being hidden or misreported as a real bug.
+- Higher-concurrency tiers show real error rates (up to ~30%). The app server
+  logged zero errors the whole time — the failures are happening somewhere
+  else in the test setup, not in the app. That's written up honestly in
+  `TEST_PLAN.md` instead of being hidden or misreported as a real bug.

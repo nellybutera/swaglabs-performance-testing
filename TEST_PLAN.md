@@ -306,10 +306,8 @@ with real access-control requirements).
 
 ## 6b. Corrected diagnosis of the connection-refused artifact (2026-08-14)
 
-**This section corrects and supersedes conclusions in §6 above. §6 is left
-unedited as a record of the original (incomplete) investigation** — per this
-project's practice of not silently rewriting past reasoning; read both to see
-how the finding evolved, not just the final answer.
+**Supersedes §6's conclusions; §6 is left as-is below for the original
+investigation trail.**
 
 **What was wrong in §6:** the original investigation sampled a handful of
 failure lines with `head -5` / eyeballing and generalized from those to "the

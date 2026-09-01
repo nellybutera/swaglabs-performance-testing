@@ -57,27 +57,13 @@ comments below for why.</stringProp>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Users" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
-          <!-- continue_forever is JMeter's "Infinite" checkbox and OVERRIDES the loops
-               value entirely when true, regardless of what loops is set to. Must stay
-               false always. Looping forever is controlled by loops equal to negative one
-               below (used for the load/stress/endurance tiers, where ThreadGroup.scheduler
-               plus duration is what actually stops the test), not by this flag. Confirmed
-               the hard way: an earlier version of this file hardcoded this to true and a
-               "5 threads, 1 loop" dry run ran for about 3 hours against the local
-               container before being caught and killed. -->
+          <!-- Must stay false. An earlier version set this true and a dry run ran ~3 hours. -->
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">-1</stringProp>
         </elementProp>
         <stringProp name="ThreadGroup.num_threads">300</stringProp>
         <stringProp name="ThreadGroup.ramp_time">45</stringProp>
-        <!-- scheduler is a boolProp: unlike stringProp, JMeter's BooleanProperty does
-             NOT evaluate dollar-brace-P function syntax, it parses the raw literal
-             string, so any non literal "true" value here silently becomes false, and
-             duration below is then ignored entirely, letting loops equal negative one
-             run forever. Confirmed the hard way: a parametrized version of this exact
-             field caused a 200 thread, 5 minute load tier run to go unbounded for over
-             35 minutes before being caught and killed. Always literal true here, never
-             parametrized. -->
+        <!-- Always literal true, never parametrized: a parametrized version silently evaluated false once and a run went unbounded for 35+ min. -->
         <boolProp name="ThreadGroup.scheduler">true</boolProp>
         <stringProp name="ThreadGroup.duration">300</stringProp>
         <stringProp name="ThreadGroup.delay">0</stringProp>

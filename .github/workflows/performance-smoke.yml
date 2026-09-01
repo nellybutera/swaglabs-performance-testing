@@ -1,32 +1,21 @@
 name: Performance smoke test
 
-# Two ways this runs:
+# Push/PR: runs the baseline tier only (~15s) as a build regression check --
+# not a load test. Shared GitHub runners can't produce trustworthy
+# load/stress/endurance numbers (noisy neighbors, no CPU/network isolation),
+# so those stay local; see TEST_PLAN.md section 8 and EVIDENCE_CHECKSUMS.txt.
 #
-# 1. On every push/PR to main: baseline tier only (50 users, 1 iteration, ~15s)
-#    against a freshly built copy of the target, as a regression check that the
-#    app still builds, serves, and the .jmx still runs clean -- NOT a load test.
-#    See TEST_PLAN.md section 8: a shared GitHub Actions runner cannot produce
-#    meaningful load/stress/endurance numbers (no control over neighboring load,
-#    CPU/network throttling), so this path deliberately stays smoke-scale. The
-#    real load/stress/endurance numbers in FINAL_REPORT.md come from local runs,
-#    documented with checksums in EVIDENCE_CHECKSUMS.txt.
+# workflow_dispatch (Actions tab -> "Run workflow"): pick any tier to run for
+# real in the pipeline. Same shared-runner caveat applies -- treat these
+# numbers as a pipeline smoke check, not a substitute for the local evidence
+# runs.
 #
-# 2. On-demand (Actions tab -> "Run workflow"): pick any tier to actually
-#    execute in the pipeline and gate the build on it -- this is what makes
-#    "performance tests run in the pipeline" literally true, not just "reports
-#    get published." The same shared-runner caveat from (1) applies here too:
-#    a manually-triggered load/stress/endurance run on this runner is a real
-#    pipeline execution and a real pass/fail gate, but its numbers still are
-#    not directly comparable to the local evidence runs -- same limitation,
-#    just opted into deliberately instead of avoided by default.
+# Either trigger gates on the brief's own SLA (P95 < 2s, error rate <= 1%),
+# not just "did any request fail."
 #
-# Either way, the run is gated on the brief's own SLA (P95 < 2s, error rate
-# <= 1%), not just "did every request fail or not" -- see "Check SLA gate" below.
-#
-# On push to main, this also publishes the committed HTML dashboards (reports/)
-# plus the fresh CI run's own report to GitHub Pages, alongside a small landing
-# page (pages/index.html). Plain JMeter HTML reports, not Allure -- see
-# README.md for why.
+# On push to main, also publishes reports/ + the fresh CI report to GitHub
+# Pages alongside pages/index.html. Plain JMeter HTML reports, not Allure --
+# see README.md for why.
 
 on:
   push:
