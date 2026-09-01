@@ -26,13 +26,15 @@ brief's thresholds are read accordingly.
 | Endurance | 150 | 10m 17s | 58.27%* | 1.2s | 34.2 req/s |
 
 \* Endurance is highly variable run to run — an earlier run of this identical
-tier came back at 0.01% error. See "A few things worth knowing" below; that
-swing is treated as a finding, not averaged away.
+tier came back at 0.01% error. That swing is treated as a finding, not
+averaged away — see `FINAL_REPORT.md`'s "Endurance" section.
 
-These 5 are the performance tiers, all against the local target. Separately,
-a **functional smoke check against the real saucedemo.com** (5 users, low
-volume, not part of the performance evidence above) caught a real routing
-divergence — see "A few things worth knowing" below.
+These 5 are the performance tiers, all against a **local copy** of the app,
+not the real saucedemo.com — it's not this project's site to load-test.
+Separately, a **functional smoke check against the real saucedemo.com** (5
+users, low volume, not part of the performance evidence above) was still run,
+and it caught something real: the live site 404s on direct links the local
+copy doesn't, a genuine routing divergence covered in `TEST_PLAN.md` §4.
 
 **Against the brief's 4 stated goals — the honest verdict is "not verified/not
 met," not "met":**
@@ -116,22 +118,6 @@ different text per flow; flagged here rather than left implicit.
 | HTML Dashboard Reports | [`reports/<tier>/`](reports/), live on [GitHub Pages](https://nellybutera.github.io/swaglabs-performance-testing/) |
 | CI/CD Integration | [`.github/workflows/performance-smoke.yml`](.github/workflows/performance-smoke.yml) — runs, gates on SLA, and publishes automatically |
 | Final performance summary report | [`FINAL_REPORT.md`](FINAL_REPORT.md) — metrics, bottleneck ID, root-cause analysis |
-
-## A few things worth knowing
-
-- Load/stress/endurance tests run against a **local copy** of the app, not the
-  real saucedemo.com — it's not this project's site to load-test.
-- A quick check against the real site was still run, just at low volume, and it
-  actually caught something: the real site 404s on some direct links that the
-  local copy doesn't (details in `TEST_PLAN.md`).
-- The generator-side error rates above are real, but confirmed not an app
-  issue — the app server logged zero errors the whole time. Written up
-  honestly in `FINAL_REPORT.md` instead of hidden or misreported as a bug.
-- Endurance was run twice with identical config: 0.01% error once, 58.27% the
-  next time. That swing is reported as-is, not smoothed into a single number
-  — see `FINAL_REPORT.md`'s "Endurance" section for why it's treated as
-  evidence of a timing-sensitive failure rather than picking whichever run
-  looked better.
 
 ## Repo map
 
