@@ -141,6 +141,24 @@ no growth trend. No evidence of a memory leak in nginx serving static files over
 sustained load — the expected outcome for a static file server, confirmed rather
 than assumed.
 
+## Corroborating observation: same test plan, different generator OS
+
+The CI pipeline (`.github/workflows/performance-smoke.yml`) can run any tier
+on demand against a GitHub-hosted Linux runner, using the exact same `.jmx`
+files as the local evidence above. Dispatching Load-Medium and Stress there
+came back **0.000% errors and single-digit-millisecond P95 on both** —
+dramatically cleaner than the same tiers' 23.56%/39.81% failure rates on the
+Windows laptop used for this report's evidence runs. This is one CI run per
+tier, not a controlled experiment, so it's reported as an observation, not a
+proven cause. But it's consistent with the root-cause diagnosis above:
+Windows' Docker Desktop routes container traffic through a WSL2/Hyper-V
+boundary that native Linux Docker doesn't have, and Linux generally handles
+ephemeral-port/TIME_WAIT reuse more permissively than Windows — both
+plausible reasons a different OS would relieve the same generator-side
+bottleneck. Changing only the generator's operating system, with the
+application and test plan held constant, made the failure disappear — which
+is itself evidence the failure was never in the application.
+
 ## Real-site routing divergence (Smoke test)
 
 Direct GETs to `/inventory.html`, `/inventory-item.html`, `/cart.html`, and
