@@ -60,25 +60,26 @@
   <table>
     <thead><tr><th>Tier</th><th>Users</th><th>Error rate</th><th>P95</th><th>Throughput</th></tr></thead>
     <tbody>
-      <tr><td>Baseline</td><td class="num">50</td><td class="num">0%</td><td class="num">71ms</td><td class="num">10.9 req/s</td></tr>
-      <tr><td>Load-Medium</td><td class="num">150</td><td class="num">23.56%</td><td class="num">6.1s</td><td class="num">30.3 req/s</td></tr>
-      <tr><td>Load-Peak</td><td class="num">300</td><td class="num">59.97%</td><td class="num">8.9s</td><td class="num">30.0 req/s</td></tr>
-      <tr><td>Stress</td><td class="num">500</td><td class="num">39.81%</td><td class="num">17.6s</td><td class="num">26.9 req/s</td></tr>
-      <tr><td>Endurance</td><td class="num">150</td><td class="num">0.01%</td><td class="num">7.6s</td><td class="num">24.5 req/s</td></tr>
+      <tr><td>Baseline</td><td class="num">50</td><td class="num">0%</td><td class="num">79ms</td><td class="num">10.9 req/s</td></tr>
+      <tr><td>Load-Medium</td><td class="num">150</td><td class="num">52.95%</td><td class="num">1.3s</td><td class="num">35.7 req/s</td></tr>
+      <tr><td>Load-Peak</td><td class="num">300</td><td class="num">72.79%</td><td class="num">4.4s</td><td class="num">33.7 req/s</td></tr>
+      <tr><td>Stress</td><td class="num">500</td><td class="num">84.79%</td><td class="num">10.2s</td><td class="num">28.1 req/s</td></tr>
+      <tr><td>Endurance</td><td class="num">150</td><td class="num">58.27%*</td><td class="num">1.2s</td><td class="num">34.2 req/s</td></tr>
     </tbody>
   </table>
   <p class="note">Error rate here counts the 5 tested flows only. Each
   dashboard's own "Total" row below counts embedded-resource sub-requests too
   and will read differently — see <code>FINAL_REPORT.md</code> for the exact
-  counting method.</p>
+  counting method. *Endurance is highly variable run to run — an earlier run
+  of this identical tier came back at 0.01% error; see FINAL_REPORT.md.</p>
 
   <table>
     <thead><tr><th>Brief's goal</th><th>Target</th><th>Result</th></tr></thead>
     <tbody>
       <tr><td>Response time</td><td class="num">&lt; 2s</td><td class="verdict-not-met">Not met at 150+ concurrent</td></tr>
-      <tr><td>Throughput</td><td class="num">500 req/s</td><td class="verdict-not-met">Not met — peaks ~30 req/s</td></tr>
-      <tr><td>Error rate</td><td class="num">&le; 1%</td><td class="verdict-not-met">Not met (Load/Stress) — <span class="verdict-met">met at Endurance</span></td></tr>
-      <tr><td>Scalability</td><td class="num">—</td><td>Informative, not conclusive</td></tr>
+      <tr><td>Throughput</td><td class="num">500 req/s</td><td class="verdict-not-met">Not met — 28–36 req/s band</td></tr>
+      <tr><td>Error rate</td><td class="num">&le; 1%</td><td class="verdict-not-met">Not met on any sustained tier</td></tr>
+      <tr><td>Scalability</td><td class="num">—</td><td>Not conclusive</td></tr>
     </tbody>
   </table>
   <p class="note">Root cause and full reasoning:
@@ -89,32 +90,32 @@
     <a class="card" href="reports/baseline/">
       <span><span class="tier">Baseline</span>
       <span class="desc">50 users, think-time timers, 1 iteration — 0% errors</span></span>
-      <span class="when">14 Aug, 11:52–11:53</span>
+      <span class="when">1 Sep, 19:19–19:19</span>
     </a>
     <a class="card" href="reports/load-medium/">
       <span><span class="tier">Load — Medium</span>
-      <span class="desc">150 concurrent, 5 min steady-state — 23.56% errors</span></span>
-      <span class="when">14 Aug, 11:53–11:59</span>
+      <span class="desc">150 concurrent, 5 min steady-state — 52.95% errors</span></span>
+      <span class="when">1 Sep, 19:20–19:25</span>
     </a>
     <a class="card" href="reports/load-peak/">
       <span><span class="tier">Load — Peak</span>
-      <span class="desc">300 concurrent, 5 min steady-state — 59.97% errors</span></span>
-      <span class="when">14 Aug, 12:00–12:06</span>
+      <span class="desc">300 concurrent, 5 min steady-state — 72.79% errors</span></span>
+      <span class="when">1 Sep, 19:26–19:31</span>
     </a>
     <a class="card" href="reports/stress/">
       <span><span class="tier">Stress</span>
-      <span class="desc">500 concurrent, 5 min steady-state — 39.81% errors</span></span>
-      <span class="when">14 Aug, 12:14–12:19</span>
+      <span class="desc">500 concurrent, 5 min steady-state — 84.79% errors</span></span>
+      <span class="when">1 Sep, 19:31–19:37</span>
     </a>
     <a class="card" href="reports/endurance/">
       <span><span class="tier">Endurance</span>
-      <span class="desc">150 concurrent, 10 min — 0.01% errors, no memory leak found</span></span>
-      <span class="when">14 Aug, 12:20–12:30</span>
+      <span class="desc">150 concurrent, 10 min — 58.27% errors (0.01% on an earlier run — see FINAL_REPORT.md)</span></span>
+      <span class="when">1 Sep, 19:37–19:47</span>
     </a>
     <a class="card" href="reports/smoke-real-site/">
       <span><span class="tier">Functional smoke check — real site</span>
       <span class="desc">5 users, not a performance tier — caught a real routing divergence, see TEST_PLAN.md §4</span></span>
-      <span class="when">13 Aug, 11:11–11:12</span>
+      <span class="when">1 Sep, 19:48–19:48</span>
     </a>
   </div>
 

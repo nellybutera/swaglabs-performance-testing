@@ -19,11 +19,15 @@ brief's thresholds are read accordingly.
 
 | Tier | Concurrent users | Duration | Error rate | P95 response time | Successful throughput |
 |---|---|---|---|---|---|
-| Baseline | 50 | 23s | **0%** | 71ms | 10.9 req/s |
-| Load-Medium | 150 | 5m 14s | 23.56% | 6.1s | 30.3 req/s |
-| Load-Peak | 300 | 5m 23s | 59.97% | 8.9s | 30.0 req/s |
-| Stress | 500 | 5m 28s | 39.81% | 17.6s | 26.9 req/s |
-| Endurance | 150 | 10m 27s | **0.01%** | 7.6s | 24.5 req/s |
+| Baseline | 50 | 23s | **0%** | 79ms | 10.9 req/s |
+| Load-Medium | 150 | 5m 12s | 52.95% | 1.3s | 35.7 req/s |
+| Load-Peak | 300 | 5m 18s | 72.79% | 4.4s | 33.7 req/s |
+| Stress | 500 | 5m 21s | 84.79% | 10.2s | 28.1 req/s |
+| Endurance | 150 | 10m 17s | 58.27%* | 1.2s | 34.2 req/s |
+
+\* Endurance is highly variable run to run — an earlier run of this identical
+tier came back at 0.01% error. See "A few things worth knowing" below; that
+swing is treated as a finding, not averaged away.
 
 These 5 are the performance tiers, all against the local target. Separately,
 a **functional smoke check against the real saucedemo.com** (5 users, low
@@ -35,10 +39,10 @@ met," not "met":**
 
 | Goal | Target | Result |
 |---|---|---|
-| Response time | < 2s | **Not met** at 150+ concurrent (6.1–17.6s P95). Baseline alone is a sanity check, not a load test. |
-| Throughput | 500 req/s | **Not met.** Peaks around 30 req/s and doesn't rise with concurrency. |
-| Error rate | ≤ 1% | **Not met** at Load-Medium/Peak/Stress. **Met at Endurance** (0.01%). |
-| Scalability | Evaluate under increasing load | **Informative, not conclusive** — error rate isn't a clean function of concurrency alone (Endurance and Load-Medium are both 150 users with very different results). |
+| Response time | < 2s | **Not met** at 150+ concurrent (1.2–10.2s P95). Baseline alone is a sanity check, not a load test. |
+| Throughput | 500 req/s | **Not met.** Sits in a 28–36 req/s band and doesn't rise with concurrency. |
+| Error rate | ≤ 1% | **Not met, on any sustained tier** — including Endurance, despite one earlier run showing 0.01%. |
+| Scalability | Evaluate under increasing load | **Not conclusive** — Endurance's own two runs vary more (0.01% to 58.27%, both at 150 users) than the concurrency progression does. |
 
 **Why the failures aren't an application bug:** the app's own server logs show
 zero errors across every run — every request that reached it succeeded. The
@@ -123,6 +127,11 @@ different text per flow; flagged here rather than left implicit.
 - The generator-side error rates above are real, but confirmed not an app
   issue — the app server logged zero errors the whole time. Written up
   honestly in `FINAL_REPORT.md` instead of hidden or misreported as a bug.
+- Endurance was run twice with identical config: 0.01% error once, 58.27% the
+  next time. That swing is reported as-is, not smoothed into a single number
+  — see `FINAL_REPORT.md`'s "Endurance" section for why it's treated as
+  evidence of a timing-sensitive failure rather than picking whichever run
+  looked better.
 
 ## Repo map
 

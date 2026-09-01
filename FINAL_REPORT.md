@@ -31,12 +31,12 @@ not every embedded-resource sub-sample:
 
 | Tier | Concurrent | Transaction attempts | Successful | Success rate | Mean (success only) | P95 (success only) | Successful throughput |
 |---|---|---|---|---|---|---|---|
-| Baseline | 50 | 250 | 250 | **100%** | 36ms | 71ms | 10.9 req/s |
-| Load-Medium | 150 | 12,451 | 9,517 | **76.44%** | 2,503ms | 6,059ms | 30.3 req/s |
-| Load-Peak | 300 | 24,164 | 9,674 | **40.03%** | 4,614ms | 8,906ms | 30.0 req/s |
-| Stress | 500 | 14,678 | 8,835 | **60.19%** | 10,405ms | 17,622ms | 26.9 req/s |
-| Endurance (10 min, 150 concurrent) | 150 | 15,377 | 15,376 | **99.99%** | 4,085ms | 7,612ms | 24.5 req/s |
-| Smoke (real site) | 5 | 25 | 5 | 20%* | 14,964ms | — | 0.1 req/s |
+| Baseline | 50 | 250 | 250 | **100%** | 37ms | 79ms | 10.9 req/s |
+| Load-Medium | 150 | 23,653 | 11,128 | **47.05%** | 626ms | 1,295ms | 35.7 req/s |
+| Load-Peak | 300 | 39,436 | 10,729 | **27.21%** | 2,047ms | 4,393ms | 33.7 req/s |
+| Stress | 500 | 59,351 | 9,029 | **15.21%** | 3,888ms | 10,214ms | 28.1 req/s |
+| Endurance (10 min, 150 concurrent) | 150 | 50,565 | 21,100 | **41.73%** | 416ms | 1,159ms | 34.2 req/s |
+| Smoke (real site) | 5 | 25 | 5 | 20%* | 2,140ms | — | — |
 
 \* Smoke's low success rate is the known routing divergence (see below), not
 the same phenomenon as Load/Peak/Stress. Its latency figures reflect real
@@ -46,22 +46,23 @@ Throughput = successful transactions ÷ measured wall-clock duration (first to
 last request timestamp in each tier's `.log` file, not the planned ramp+duration
 config). Baseline's number isn't a real capacity figure — 50 users doing one
 pass each isn't sustained traffic — but it's included for completeness. Across
-every sustained tier, successful throughput tops out around **30 req/s**,
+every sustained tier, successful throughput sits in a **28–36 req/s band**,
 regardless of concurrency level, which is itself informative: it's well under
 the brief's 500 req/s target, and it doesn't rise with more concurrent users
 (Load-Peak at 300 and Stress at 500 aren't faster than Load-Medium at 150) —
 consistent with the generator-side bottleneck being the ceiling, not the
 application's real serving capacity.
 
-Load-Medium/Load-Peak/Stress all fall well short of the brief's ≤1% error
-target at 150+ concurrent. **Endurance is the exception — see below.**
+Every sustained tier — including Endurance — falls well short of the brief's
+≤1% error target at 150+ concurrent. Endurance's own result varies
+dramatically run to run; see "Endurance" below.
 
 ## Baseline: clean pass
 
-0% errors, P95 71ms, well under the brief's 2s target. This is the one tier with no
+0% errors, P95 79ms, well under the brief's 2s target. This is the one tier with no
 caveats — 50 users, 1 iteration each, against the local target, nothing unusual.
 
-## Connection-refused / bind-exhaustion artifact (Load-Medium, Load-Peak, Stress)
+## Connection-refused / bind-exhaustion artifact (all 4 sustained tiers)
 
 At 150+ concurrent, a substantial share of requests still fail — not with an
 application error, but with a client-side connection failure, even with
@@ -69,15 +70,16 @@ think-time pacing in place. Full diagnostic detail is in `TEST_PLAN.md` §6b.
 
 | Tier | `HttpHostConnectException` (Connection refused) | `BindException` (client port exhaustion) | `SocketTimeoutException` |
 |---|---|---|---|
-| Load-Medium | 0 | **3,843** | 0 |
-| Load-Peak | 269 | **19,057** | 0 |
-| Stress | 3,006 | 5,241 | 2,081 |
+| Load-Medium | 0 | **13,758** | 0 |
+| Load-Peak | 0 | **34,646** | 0 |
+| Stress | 3,762 | **58,899** | 28 |
+| Endurance | 0 | **33,933** | 0 |
 
 (Counted at the individual-request level, e.g. `GET /inventory.html`, not the
 transaction-controller rollup — the rollup only records "1 sample failed,"
-not why. A further ~2,900–2,700 "Embedded resource download error" failures
-per tier, on `favicon.ico`/static assets at HTTP 200, are a separate minor
-issue and not counted in the table above.)
+not why. A further 772–7,055 "Embedded resource download error" failures per
+tier, on `favicon.ico`/static assets at HTTP 200, are a separate minor issue
+and not counted in the table above.)
 
 **`BindException` — still the dominant failure — is the same specific failure
 mode as before: the test generator (this laptop) running out of free outbound
@@ -104,12 +106,15 @@ shut down`). Keep-alive-off exhausts ports; keep-alive-on exhausts JMeter's own
 connection pool — the generator hits a ceiling either way. That's why
 `Connection: close` stays in all five `.jmx` files rather than being reverted.
 
-**Stress tier's failure mix is more mixed** (`BindException` and
-`HttpHostConnectException` at similar scale, plus the only `SocketTimeoutException`
-occurrences) — plausibly because at 500 concurrent, requests queue and time out
-before enough connections accumulate in TIME_WAIT to exhaust the pool the same
-single way Load-Medium/Load-Peak do. This tier's exact mechanism is still not
-fully resolved and remains an open item.
+**Stress tier's failure mix is now the same mechanism as the others** —
+`BindException` dominant (58,899 of 62,689 failures), with a smaller
+`HttpHostConnectException`/`SocketTimeoutException` minority. On an earlier
+run of this suite, Stress looked mechanistically different (a more even
+`HttpHostConnectException`/`BindException` split, suggesting queuing or
+backpressure rather than pure port exhaustion); this run doesn't reproduce
+that distinction. Taken with the Endurance variance below, that's a second
+sign this whole failure family is less deterministic run-to-run than a single
+pass can show.
 
 **Conclusion:** this is a test-environment (generator-side) bottleneck, not an
 application failure — nginx never saw these requests, under either
@@ -121,25 +126,32 @@ generator needs a real fix (see "What would actually verify these goals"
 below) before these numbers mean anything about the application. Full
 investigation trail, including the refuted hypothesis, in `TEST_PLAN.md` §6b.
 
-## Endurance: the think-time fix's clearest result
+## Endurance: high run-to-run variance, not a fix
 
-Endurance (150 concurrent, 10 minutes, same think-time timer as every other
-tier) came back at **99.99% success — 1 failure out of 15,377 attempts** —
-down from **23.24%** in the previous, timer-less version of this same tier.
+Endurance has now been run twice, identical `.jmx` file both times (150
+concurrent, 10 minutes, same think-time timer as every other tier):
 
-One observation worth flagging, not a settled conclusion: Endurance and
-Load-Medium are both 150 concurrent, yet Endurance stays almost entirely
-clean while Load-Medium fails 23.6% of the time. The two tiers differ in more
-than one way at once — ramp-up (60s vs 30s), steady-state duration (10 min vs
-5 min), and think time is present in both — so this is a single uncontrolled
-comparison, not an isolated variable. It's consistent with run *shape*
-(ramp-up speed, sustained connection-open rate) mattering as much as raw
-concurrency, but that's a hypothesis for a follow-up test, not a proven cause.
+| Run | Success rate | Failures |
+|---|---|---|
+| Run 1 | 99.99% | 1 of 15,377 |
+| Run 2 | 41.73% | 29,465 of 50,565 |
 
-Container memory before and after the run: ~18-22MB either way,
-no growth trend. No evidence of a memory leak in nginx serving static files over
-sustained load — the expected outcome for a static file server, confirmed rather
-than assumed.
+That is not a small discrepancy — it is the same test plan, against the same
+target, swinging from essentially perfect to a majority failure rate. **This
+supersedes an earlier version of this report, which treated Run 1 alone as
+evidence that think-time pacing had fixed the port-exhaustion problem at this
+tier.** One clean run never proved that; it proved the underlying race didn't
+trigger on that particular pass. The swing between the two runs is itself the
+more useful finding: it says the port-exhaustion failure is **non-deterministic
+and timing-sensitive**, not a fixed property of a given concurrency level —
+which is consistent with, and arguably strengthens, the root-cause diagnosis
+in this report. A real application defect would not swing from 0.01% to
+41.73% failure between two otherwise-identical runs; a laptop's ephemeral-port
+pool racing against connection churn plausibly would.
+
+Practical consequence: Endurance cannot be reported as meeting the brief's
+≤1% error-rate goal. It was observed once, not reliably reproduced — see
+"Goal-by-goal verdict" below.
 
 ## Corroborating observation: same test plan, different generator OS
 
@@ -147,7 +159,7 @@ The CI pipeline (`.github/workflows/performance-smoke.yml`) can run any tier
 on demand against a GitHub-hosted Linux runner, using the exact same `.jmx`
 files as the local evidence above. Dispatching Load-Medium and Stress there
 came back **0.000% errors and single-digit-millisecond P95 on both** —
-dramatically cleaner than the same tiers' 23.56%/39.81% failure rates on the
+dramatically cleaner than the same tiers' 52.95%/84.79% failure rates on the
 Windows laptop used for this report's evidence runs. This is one CI run per
 tier, not a controlled experiment, so it's reported as an observation, not a
 proven cause. But it's consistent with the root-cause diagnosis above:
@@ -180,10 +192,10 @@ run, for reasons explained per goal below.
 
 | Goal | Target | Verdict |
 |---|---|---|
-| **Response time** | < 2s for critical transactions | **Not met at 150+ concurrent.** Baseline (50 users) is 71ms P95 — a sanity check, not a load test. Endurance (150 concurrent, sustained) is close but over at 7.6s P95; Load-Medium/Peak/Stress range 6.1–17.6s P95. |
-| **Throughput** | 500 req/s | **Not met.** Successful-only throughput peaks around 30 req/s (Load-Medium) and does not rise with concurrency — see "Results by tier" above. That ceiling reflects the test generator's own ports/connections limit, not necessarily the application's real capacity; see "What would actually verify this" below. |
-| **Error rate** | ≤ 1% under max load | **Not met at Load-Medium/Peak/Stress** (23.56% / 59.97% / 39.81% failure). **Met at Endurance** — 0.01% failure (1 of 15,377) at 150 concurrent sustained for 10 minutes, once think-time pacing was added. Confirmed not an application fault throughout (nginx logs clean) — the remaining failures trace to the test generator's own TCP port exhaustion, worse at higher concurrency and shorter/burstier ramp-ups. |
-| **Scalability** | Evaluate behavior under increasing load | **Informative, still not conclusive.** The 50→150→300→500 progression shows error rate isn't a clean function of concurrency alone — Endurance and Load-Medium are both 150 concurrent with very different results (see "Endurance" above) — but because the generator remains the bottleneck at 150+, this still isn't a clean read of the *application's* scalability. |
+| **Response time** | < 2s for critical transactions | **Not met at 150+ concurrent.** Baseline (50 users) is 79ms P95 — a sanity check, not a load test. Every sustained tier exceeds 2s P95 (1.2–10.2s across Load-Medium/Peak/Stress/Endurance). |
+| **Throughput** | 500 req/s | **Not met.** Successful-only throughput sits in a 28–36 req/s band across every sustained tier and does not rise with concurrency — see "Results by tier" above. That ceiling reflects the test generator's own ports/connections limit, not necessarily the application's real capacity; see "What would actually verify this" below. |
+| **Error rate** | ≤ 1% under max load | **Not met, on any sustained tier.** Load-Medium 52.95%, Load-Peak 72.79%, Stress 84.79%, Endurance 58.27% failure. Endurance was observed at 0.01% failure on an earlier run of the identical test plan — that variance is itself discussed under "Endurance" above, not treated as a pass. Confirmed not an application fault throughout (nginx logs clean) — the failures trace to the test generator's own TCP port exhaustion. |
+| **Scalability** | Evaluate behavior under increasing load | **Not conclusive.** The 50→150→300→500 progression shows error rate rising roughly with concurrency (Load-Medium → Load-Peak → Stress), but Endurance's own two runs (0.01% and 58.27%, both at 150 concurrent) show more run-to-run variance than the concurrency progression itself — so this isn't a clean read of the *application's* scalability, only of how unstable the test generator gets under sustained load. |
 
 ## What would actually verify these goals
 
@@ -206,12 +218,14 @@ brief's numbers. To actually verify the four goals above, in priority order:
 2. **Re-run Load/Stress/Endurance** with that fix, and only then compute
    successful-only throughput/latency numbers as this app's real answer to
    the brief's goals.
-3. **Bracket the actual break point further** — 150 concurrent is now covered
-   (Load-Medium, Endurance), narrowing the previous "50 perfect → 200 mostly
-   failing" gap. What's still missing is a data point between 50 and 150, and
-   an explanation for why Endurance (150, paced over 10 min) stays clean while
-   Load-Medium (also 150, tighter 5-min steady-state) doesn't — that gap is
-   about run *shape*, not just concurrency, and isn't fully explained yet.
+3. **Run each tier multiple times before trusting any single result.** The
+   Endurance variance above (0.01% vs 58.27% failure on identical config) is
+   the clearest evidence in this report that one pass isn't enough evidence
+   for a timing-sensitive failure mode — a single clean run doesn't mean a
+   problem is fixed, and a single bad run doesn't fully characterize it
+   either. Bracketing the break point (a data point between 50 and 150
+   concurrent) is still worth doing, but repeat runs matter more than a new
+   concurrency level at this point.
 
 ## Live monitoring (Grafana + InfluxDB)
 
