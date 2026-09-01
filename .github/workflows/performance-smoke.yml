@@ -44,7 +44,10 @@ on:
           - endurance
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Includes the tier so, e.g., a Load-Medium dispatch doesn't cancel a Stress
+  # dispatch running at the same time -- only a truly superseded run (same
+  # trigger, same tier, newer push) gets cancelled.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.inputs.tier || 'push' }}
   cancel-in-progress: true
 
 permissions:
