@@ -29,18 +29,29 @@ Recomputed directly from the raw `.jtl` files, counting only the 5 named
 transaction-controller samples (Login/Inventory/Inventory Item/Cart/Checkout),
 not every embedded-resource sub-sample:
 
-| Tier | Concurrent | Transaction attempts | Successful | Success rate | Mean (success only) | P95 (success only) |
-|---|---|---|---|---|---|---|
-| Baseline | 50 | 250 | 250 | **100%** | 36ms | 71ms |
-| Load-Medium | 150 | 12,451 | 9,517 | **76.44%** | 2,503ms | 6,059ms |
-| Load-Peak | 300 | 24,164 | 9,674 | **40.03%** | 4,614ms | 8,906ms |
-| Stress | 500 | 14,678 | 8,835 | **60.19%** | 10,405ms | 17,622ms |
-| Endurance (10 min, 150 concurrent) | 150 | 15,377 | 15,376 | **99.99%** | 4,085ms | 7,612ms |
-| Smoke (real site) | 5 | 25 | 5 | 20%* | 14,964ms | — |
+| Tier | Concurrent | Transaction attempts | Successful | Success rate | Mean (success only) | P95 (success only) | Successful throughput |
+|---|---|---|---|---|---|---|---|
+| Baseline | 50 | 250 | 250 | **100%** | 36ms | 71ms | 10.9 req/s |
+| Load-Medium | 150 | 12,451 | 9,517 | **76.44%** | 2,503ms | 6,059ms | 30.3 req/s |
+| Load-Peak | 300 | 24,164 | 9,674 | **40.03%** | 4,614ms | 8,906ms | 30.0 req/s |
+| Stress | 500 | 14,678 | 8,835 | **60.19%** | 10,405ms | 17,622ms | 26.9 req/s |
+| Endurance (10 min, 150 concurrent) | 150 | 15,377 | 15,376 | **99.99%** | 4,085ms | 7,612ms | 24.5 req/s |
+| Smoke (real site) | 5 | 25 | 5 | 20%* | 14,964ms | — | 0.1 req/s |
 
 \* Smoke's low success rate is the known routing divergence (see below), not
 the same phenomenon as Load/Peak/Stress. Its latency figures reflect real
 internet round-trips to saucedemo.com, not the local target.
+
+Throughput = successful transactions ÷ measured wall-clock duration (first to
+last request timestamp in each tier's `.log` file, not the planned ramp+duration
+config). Baseline's number isn't a real capacity figure — 50 users doing one
+pass each isn't sustained traffic — but it's included for completeness. Across
+every sustained tier, successful throughput tops out around **30 req/s**,
+regardless of concurrency level, which is itself informative: it's well under
+the brief's 500 req/s target, and it doesn't rise with more concurrent users
+(Load-Peak at 300 and Stress at 500 aren't faster than Load-Medium at 150) —
+consistent with the generator-side bottleneck being the ceiling, not the
+application's real serving capacity.
 
 Load-Medium/Load-Peak/Stress all fall well short of the brief's ≤1% error
 target at 150+ concurrent. **Endurance is the exception — see below.**
@@ -152,7 +163,7 @@ run, for reasons explained per goal below.
 | Goal | Target | Verdict |
 |---|---|---|
 | **Response time** | < 2s for critical transactions | **Not met at 150+ concurrent.** Baseline (50 users) is 71ms P95 — a sanity check, not a load test. Endurance (150 concurrent, sustained) is close but over at 7.6s P95; Load-Medium/Peak/Stress range 6.1–17.6s P95. |
-| **Throughput** | 500 req/s | **Not verified.** No defensible successful-only req/s figure has been computed for any tier; see "What would actually verify this" below. |
+| **Throughput** | 500 req/s | **Not met.** Successful-only throughput peaks around 30 req/s (Load-Medium) and does not rise with concurrency — see "Results by tier" above. That ceiling reflects the test generator's own ports/connections limit, not necessarily the application's real capacity; see "What would actually verify this" below. |
 | **Error rate** | ≤ 1% under max load | **Not met at Load-Medium/Peak/Stress** (8.4% / 30.2% / 21.5% failure). **Met at Endurance** — 0.003% failure at 150 concurrent sustained for 10 minutes, once think-time pacing was added. Confirmed not an application fault throughout (nginx logs clean) — the remaining failures trace to the test generator's own TCP port exhaustion, worse at higher concurrency and shorter/burstier ramp-ups. |
 | **Scalability** | Evaluate behavior under increasing load | **Informative, still not conclusive.** The 50→150→300→500 progression shows error rate isn't a clean function of concurrency alone — Endurance and Load-Medium are both 150 concurrent with very different results (see "Endurance" above) — but because the generator remains the bottleneck at 150+, this still isn't a clean read of the *application's* scalability. |
 
