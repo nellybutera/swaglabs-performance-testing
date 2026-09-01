@@ -6,17 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root {
-    color-scheme: light dark;
     --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --border: #ddd;
-    --card-bg: #fafafa; --accent: #2563eb; --ok-bg: #ecfdf5; --ok-fg: #047857;
-    --warn-bg: #fffbeb; --warn-fg: #92400e; --code-bg: rgba(0,0,0,0.06);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #30363d;
-      --card-bg: #161b22; --accent: #58a6ff; --ok-bg: #04260f; --ok-fg: #3fb950;
-      --warn-bg: #2b2210; --warn-fg: #e3b341; --code-bg: rgba(255,255,255,0.08);
-    }
+    --card-bg: #fafafa; --accent: #2563eb; --ok-fg: #047857; --warn-fg: #92400e;
+    --code-bg: rgba(0,0,0,0.06);
   }
   * { box-sizing: border-box; }
   body {
@@ -24,37 +16,29 @@
     max-width: 860px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem;
     line-height: 1.55; background: var(--bg); color: var(--fg);
   }
-  h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
   p.lede { color: var(--muted); margin-top: 0; }
-  .banner {
-    background: var(--ok-bg); color: var(--ok-fg); border-radius: 8px;
-    padding: 0.7rem 1rem; font-size: 0.9rem; margin: 1.25rem 0 2rem;
-  }
-  h2 { font-size: 1.1rem; margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  p.status { font-size: 0.9rem; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+  h2 { font-size: 1.05rem; margin-top: 2.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 1rem; }
   th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
   th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.02em; }
   td.num { white-space: nowrap; }
   .verdict-not-met { color: var(--warn-fg); font-weight: 600; }
   .verdict-met { color: var(--ok-fg); font-weight: 600; }
+  .note { font-size: 0.85rem; color: var(--muted); margin-top: 0.6rem; }
   .grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; margin-top: 1rem; }
   a.card {
     display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
-    border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px;
+    border: 1px solid var(--border); background: var(--card-bg); border-radius: 6px;
     padding: 0.9rem 1.1rem; text-decoration: none; color: inherit;
   }
   a.card:hover { border-color: var(--accent); }
   a.card .tier { font-weight: 600; }
   a.card .desc { font-size: 0.85rem; color: var(--muted); display: block; margin-top: 0.2rem; }
   a.card .when { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
-  .smoke-note {
-    font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 0;
-  }
-  .grafana-note {
-    font-size: 0.9rem; color: var(--muted); background: var(--card-bg);
-    border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem;
-  }
-  .grafana-note img { max-width: 100%; border-radius: 6px; margin-top: 0.75rem; display: block; }
+  .grafana-note { font-size: 0.9rem; margin-top: 1rem; }
+  .grafana-note img { max-width: 100%; border-radius: 6px; margin-top: 0.75rem; display: block; border: 1px solid var(--border); }
   footer { margin-top: 3rem; font-size: 0.85rem; color: var(--muted); }
   code { background: var(--code-bg); padding: 0.1rem 0.35rem; border-radius: 4px; }
   a { color: var(--accent); }
@@ -67,13 +51,10 @@
   Academy Performance Testing assignment. Full methodology and root-cause
   analysis are in
   <a href="https://github.com/nellybutera/swaglabs-performance-testing#readme">the repo README</a>;
-  this page is the results summary and the dashboard index.</p>
-
-  <div class="banner">
-    ✅ CI passing as of the latest push. The 5 tier reports below are fixed
-    evidence runs (dates shown per card) — they don't change on every push;
-    only the "Latest CI run" card does.
-  </div>
+  this page is the results summary and dashboard index.</p>
+  <p class="status">CI passing as of the latest push. The 5 tier reports below are
+  fixed evidence runs (dates shown per card) — only the "Latest CI run" card
+  changes on every push.</p>
 
   <h2>Findings at a glance</h2>
   <table>
@@ -86,6 +67,10 @@
       <tr><td>Endurance</td><td class="num">150</td><td class="num">0.01%</td><td class="num">7.6s</td><td class="num">24.5 req/s</td></tr>
     </tbody>
   </table>
+  <p class="note">Error rate here counts the 5 tested flows only. Each
+  dashboard's own "Total" row below counts embedded-resource sub-requests too
+  and will read differently — see <code>FINAL_REPORT.md</code> for the exact
+  counting method.</p>
 
   <table>
     <thead><tr><th>Brief's goal</th><th>Target</th><th>Result</th></tr></thead>
@@ -96,14 +81,8 @@
       <tr><td>Scalability</td><td class="num">—</td><td>Informative, not conclusive</td></tr>
     </tbody>
   </table>
-
-  <p class="lede" style="margin-top:1rem; font-size:0.9rem;">
-    None of this is an application bug — the app's own server logs show zero
-    errors on every run. The failures trace to the test generator's own
-    TCP port/connection limits under sustained concurrency, diagnosed down
-    to the exact exception type in
-    <a href="https://github.com/nellybutera/swaglabs-performance-testing/blob/main/FINAL_REPORT.md">FINAL_REPORT.md</a>.
-  </p>
+  <p class="note">Root cause and full reasoning:
+  <a href="https://github.com/nellybutera/swaglabs-performance-testing/blob/main/FINAL_REPORT.md">FINAL_REPORT.md</a>.</p>
 
   <h2>Evidence tier reports</h2>
   <div class="grid">
@@ -132,38 +111,40 @@
       <span class="desc">150 concurrent, 10 min — 0.01% errors, no memory leak found</span></span>
       <span class="when">14 Aug, 12:20–12:30</span>
     </a>
-  </div>
-  <p class="smoke-note">
-    Separately: a <strong>functional smoke check against the real
-    saucedemo.com</strong> (5 users, not a performance tier) —
-    <a class="card" href="reports/smoke-real-site/" style="display:inline-flex; margin-top:0.5rem;">
-      <span><span class="tier">Smoke — real site</span>
-      <span class="desc">Caught a real routing divergence — see TEST_PLAN.md §4</span></span>
+    <a class="card" href="reports/smoke-real-site/">
+      <span><span class="tier">Functional smoke check — real site</span>
+      <span class="desc">5 users, not a performance tier — caught a real routing divergence, see TEST_PLAN.md §4</span></span>
       <span class="when">13 Aug, 11:11–11:12</span>
     </a>
-  </p>
+  </div>
 
   <h2>Pipeline</h2>
   <div class="grid">
     <a class="card" href="ci-smoke/">
       <span><span class="tier">Latest CI run</span>
-      <span class="desc">Baseline tier, rebuilt and re-run on every push — gated on the brief's own SLA (P95 &lt; 2s, error rate &le; 1%)</span></span>
+      <span class="desc">Baseline tier, re-run on every push — gated on the brief's own SLA (P95 &lt; 2s, error rate &le; 1%)</span></span>
       <span class="when">always current</span>
     </a>
   </div>
-  <p class="smoke-note">
-    Also runs weekly against Load-Medium, and any tier can be triggered
-    on demand from the
-    <a href="https://github.com/nellybutera/swaglabs-performance-testing/actions">Actions tab</a>.
-  </p>
+  <p class="note">Also runs weekly against Load-Medium; any tier can be
+  triggered on demand from the
+  <a href="https://github.com/nellybutera/swaglabs-performance-testing/actions">Actions tab</a>.</p>
 
-  <h2>Live Grafana monitoring</h2>
+  <h2>Live monitoring</h2>
+  <p class="lede" style="margin-bottom:0;">Grafana was added because performance
+  data is a continuous time series, not a per-test pass/fail — a live
+  dashboard fits it better than a static report alone.</p>
   <div class="grafana-note">
-    Not hosted here — Grafana + InfluxDB run in Docker locally
-    (<code>docker compose up -d</code>, see the repo README) while a test is
-    running, so there's nothing static to publish. This is a screenshot from a
-    real local run, not a mockup:
-    <img src="grafana-dashboard.png" alt="Grafana dashboard showing live JMeter metrics: response time, throughput, per-transaction P95, error count, active threads, network bytes">
+    Not hosted publicly — it's a local Docker stack
+    (<code>docker compose up -d</code>, see the
+    <a href="https://github.com/nellybutera/swaglabs-performance-testing#readme">README</a>),
+    so there's nothing to link to live. The
+    <a href="https://github.com/nellybutera/swaglabs-performance-testing/tree/main/grafana">dashboard config</a>
+    is in the repo. Screenshot from a real local run, not a mockup —
+    <a href="grafana-dashboard.png">view full size</a>:
+    <a href="grafana-dashboard.png">
+      <img src="grafana-dashboard.png" alt="Grafana dashboard showing live JMeter metrics: response time, throughput, per-transaction P95, error count, active threads, network bytes">
+    </a>
   </div>
 
   <footer>
