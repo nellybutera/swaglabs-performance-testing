@@ -3,15 +3,13 @@
 See `TEST_PLAN.md` for full methodology, scope reasoning, and the investigation
 narratives summarized here. This report is the results summary the brief asks for.
 
-**Note on this version:** the numbers below are from a rebuilt tier suite —
-Load split into literal **Load-Medium (150 users)** and **Load-Peak (300
-users)** tiers matching the brief's wording, and a 1–3s think-time timer added
-between every request in all five `.jmx` files. An earlier pass of this report
-miscounted throughput/response-time by including failed connection attempts as
-completed requests; that's fixed here too. Full history of both changes is in
-`TEST_PLAN.md` §6b and its git log, not repeated in this report.
-
 ## Executive summary
+
+Five tiers were run against Swag Labs: Baseline (50 users), Load-Medium (150
+users), Load-Peak (300 users), Stress (500 users), and Endurance (150 users,
+10 minutes), plus a low-volume smoke check against the real saucedemo.com.
+Every tier includes a 1–3s think-time timer between requests, matching the
+brief's "think time timers between requests" requirement.
 
 Swag Labs (saucedemo.com) has no server-side application logic — it's a 100%
 client-side single-page app (`TEST_PLAN.md` §2, verified against the app's own
@@ -25,7 +23,7 @@ Grafana monitoring) and an honestly-diagnosed test-environment bottleneck, which
 is a legitimate and common outcome of a first performance-test pass — just not
 the same thing as a clean pass on the brief's goals.
 
-## Results by tier — rebuilt suite (2026-08-14, post-timer)
+## Results by tier
 
 Recomputed directly from the raw `.jtl` files, counting only the 5 named
 transaction-controller samples (Login/Inventory/Inventory Item/Cart/Checkout),
@@ -44,8 +42,7 @@ not every embedded-resource sub-sample:
 the same phenomenon as Load/Peak/Stress. Its latency figures reflect real
 internet round-trips to saucedemo.com, not the local target.
 
-Success rates at Load-Medium/Load-Peak/Stress are all better than the prior
-single-Load-tier's 10.56%, but still fall well short of the brief's ≤1% error
+Load-Medium/Load-Peak/Stress all fall well short of the brief's ≤1% error
 target at 150+ concurrent. **Endurance is the exception — see below.**
 
 ## Baseline: clean pass
@@ -56,9 +53,8 @@ caveats — 50 users, 1 iteration each, against the local target, nothing unusua
 ## Connection-refused / bind-exhaustion artifact (Load-Medium, Load-Peak, Stress)
 
 At 150+ concurrent, a substantial share of requests still fail — not with an
-application error, but with a client-side connection failure, the same failure
-family diagnosed in the previous version of this report (§6b of `TEST_PLAN.md`)
-even after adding think-time pacing:
+application error, but with a client-side connection failure, even with
+think-time pacing in place. Full diagnostic detail is in `TEST_PLAN.md` §6b.
 
 | Tier | `HttpHostConnectException` (Connection refused) | `BindException` (client port exhaustion) | `SocketTimeoutException` |
 |---|---|---|---|
@@ -151,9 +147,7 @@ see `TEST_PLAN.md` §4 for why matching this exactly wasn't worth the effort her
 
 Straight answer, evaluated against the assignment's 4 stated goals: **not
 verified.** Not "verified with caveats" — genuinely not achieved by this test
-run, for reasons explained per goal below. This is being said plainly rather
-than softened, because the report previously said "Met" on two of these and
-that was wrong.
+run, for reasons explained per goal below.
 
 | Goal | Target | Verdict |
 |---|---|---|

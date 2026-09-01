@@ -1,11 +1,7 @@
-# Real-time performance monitoring stack: the load-test target, InfluxDB (time
-# series storage for JMeter's Backend Listener output), and Grafana (dashboard).
-#
-# This is for live/exploratory monitoring during a run, NOT how the committed
-# results in reports/ and FINAL_REPORT.md were produced -- those came from plain
-# `jmeter -n -t ... -e -o reports/<tier>` runs against the `swaglabs-perf-target`
-# container alone (see TEST_PLAN.md). Re-running a tier through this stack would
-# invalidate EVIDENCE_CHECKSUMS.txt; use it for new/demo runs only.
+# Live monitoring stack: load-test target + InfluxDB (JMeter Backend Listener
+# storage) + Grafana. For watching a run in real time only -- the committed
+# results in reports/ come from plain `jmeter -n -t ... -e -o reports/<tier>`
+# runs against the target container alone (see TEST_PLAN.md).
 #
 # Usage: docker compose up -d
 #        Grafana: http://localhost:3000 (admin/admin, dashboard auto-provisioned)

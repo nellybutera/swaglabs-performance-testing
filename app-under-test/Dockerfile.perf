@@ -1,12 +1,8 @@
-# Load-test target build for the Performance Testing assignment.
-# Intentionally NOT the repo's own Dockerfile (that one installs Sauce Connect for
-# cloud e2e runs, not a servable build). This is a real production-shaped serve:
-# multi-stage build -> static nginx, not `vite preview`/`npm start` (dev servers'
-# throughput ceilings are dev-server artifacts, not representative of anything).
+# Load-test target build. Not the repo's own Dockerfile (that one installs Sauce
+# Connect for cloud e2e runs) -- this is a production-shaped serve: multi-stage
+# build to static nginx, not a dev server, so throughput isn't a dev-server artifact.
 #
-# Pinned versions (record these in TEST_PLAN.md verbatim):
-#   node:24.9.0-alpine  (matches .nvmrc)
-#   nginx:1.27-alpine
+# node:24.9.0-alpine (matches .nvmrc), nginx:1.27-alpine
 
 FROM node:24.9.0-alpine AS build
 WORKDIR /app
