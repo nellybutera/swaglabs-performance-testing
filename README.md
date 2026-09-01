@@ -24,10 +24,11 @@ brief's thresholds are read accordingly.
 | Load-Peak | 300 | 5m 23s | 59.97% | 8.9s | 30.0 req/s |
 | Stress | 500 | 5m 28s | 39.81% | 17.6s | 26.9 req/s |
 | Endurance | 150 | 10m 27s | **0.01%** | 7.6s | 24.5 req/s |
-| Smoke (real site) | 5 | 42s | 80%* | — | — |
 
-\* Smoke's failures are a real-site routing divergence, not a performance
-issue — see "A few things worth knowing" below.
+These 5 are the performance tiers, all against the local target. Separately,
+a **functional smoke check against the real saucedemo.com** (5 users, low
+volume, not part of the performance evidence above) caught a real routing
+divergence — see "A few things worth knowing" below.
 
 **Against the brief's 4 stated goals — the honest verdict is "not verified/not
 met," not "met":**
@@ -45,6 +46,55 @@ failures trace to the test generator's own TCP port/connection limits under
 sustained concurrency, diagnosed down to the exact exception type in
 `FINAL_REPORT.md` and `TEST_PLAN.md` §6b. That diagnosis, not a clean pass on
 the brief's numbers, is this project's actual finding.
+
+## How the required flows map to requests
+
+**A note on "search":** Swag Labs' standard UI has no search feature — no
+search box, no query endpoint, checked directly against the app's source.
+What's tested as "search" below is the **product inventory listing page**
+(`GET /inventory.html`) — the closest real equivalent the app has to
+browsing/finding products. That's a deliberate substitution, stated plainly
+here rather than left for a reviewer to wonder whether a request was just
+relabeled.
+
+Every one of the 5 required flows is tested identically at every performance tier:
+
+| Flow (brief) | What's actually requested | Baseline | Load-Medium | Load-Peak | Stress | Endurance |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| Login | `GET /` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Search | `GET /inventory.html` (see note above) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Product details | `GET /inventory-item.html` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Cart | `GET /cart.html` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Checkout | `GET /checkout-step-one.html` | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+**JMeter test plan structure** — every tier file follows this shape; only the
+Thread Group's numbers differ between tiers:
+
+```
+Test Plan
+├── User Defined Variables (protocol / host / port)
+├── HTTP Request Defaults
+├── HTTP Header Manager (Connection: close — see TEST_PLAN.md §6)
+├── Thread Group (users / ramp-up / duration — the only part that differs per tier)
+│   ├── 01 Login          → GET /                      + assertions
+│   ├── 02 Inventory      → GET /inventory.html         + assertions
+│   ├── 03 Inventory Item → GET /inventory-item.html    + assertions
+│   ├── 04 Cart           → GET /cart.html              + assertions
+│   └── 05 Checkout       → GET /checkout-step-one.html + assertions
+├── Uniform Random Timer (1–3s think time, applies to every request)
+└── Listeners (Summary Report, Aggregate Report, View Results Tree)
+```
+
+**Assertions** — every request carries two:
+- **Response code assertion** — expects HTTP `200`.
+- **Response body assertion** — expects the page to contain `<title>Swag Labs</title>`.
+
+One honest limitation: the body assertion is the **same generic string on
+every flow**, not flow-specific content (it doesn't check the cart page for
+cart-specific text, for example). It confirms the response actually came from
+this app rather than a routing/proxy error — it doesn't independently verify
+each page rendered its intended content. A stronger version would assert
+different text per flow; flagged here rather than left implicit.
 
 ## What to look at, in order
 

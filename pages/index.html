@@ -9,13 +9,13 @@
     color-scheme: light dark;
     --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --border: #ddd;
     --card-bg: #fafafa; --accent: #2563eb; --ok-bg: #ecfdf5; --ok-fg: #047857;
-    --code-bg: rgba(0,0,0,0.06);
+    --warn-bg: #fffbeb; --warn-fg: #92400e; --code-bg: rgba(0,0,0,0.06);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --border: #30363d;
       --card-bg: #161b22; --accent: #58a6ff; --ok-bg: #04260f; --ok-fg: #3fb950;
-      --code-bg: rgba(255,255,255,0.08);
+      --warn-bg: #2b2210; --warn-fg: #e3b341; --code-bg: rgba(255,255,255,0.08);
     }
   }
   * { box-sizing: border-box; }
@@ -31,7 +31,13 @@
     padding: 0.7rem 1rem; font-size: 0.9rem; margin: 1.25rem 0 2rem;
   }
   h2 { font-size: 1.1rem; margin-top: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
-  .grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 1rem; }
+  th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.02em; }
+  td.num { white-space: nowrap; }
+  .verdict-not-met { color: var(--warn-fg); font-weight: 600; }
+  .verdict-met { color: var(--ok-fg); font-weight: 600; }
+  .grid { display: grid; gap: 0.75rem; grid-template-columns: 1fr; margin-top: 1rem; }
   a.card {
     display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
     border: 1px solid var(--border); background: var(--card-bg); border-radius: 8px;
@@ -41,6 +47,9 @@
   a.card .tier { font-weight: 600; }
   a.card .desc { font-size: 0.85rem; color: var(--muted); display: block; margin-top: 0.2rem; }
   a.card .when { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+  .smoke-note {
+    font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 0;
+  }
   .grafana-note {
     font-size: 0.9rem; color: var(--muted); background: var(--card-bg);
     border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem;
@@ -53,16 +62,48 @@
 </head>
 <body>
   <h1>Swag Labs Performance Test Reports</h1>
-  <p class="lede">JMeter HTML dashboards, one per test tier. See
-  <a href="https://github.com/nellybutera/swaglabs-performance-testing">the repo</a>
-  for <code>TEST_PLAN.md</code> and <code>FINAL_REPORT.md</code> — read those first,
-  the numbers here don't mean what they look like without that context.</p>
+  <p class="lede">JMeter load testing against
+  <a href="https://www.saucedemo.com/">Swag Labs</a> — an AmaliTech Training
+  Academy Performance Testing assignment. Full methodology and root-cause
+  analysis are in
+  <a href="https://github.com/nellybutera/swaglabs-performance-testing#readme">the repo README</a>;
+  this page is the results summary and the dashboard index.</p>
 
   <div class="banner">
-    ✅ CI smoke test passing as of the latest push. The 5 reports below are from
-    fixed evidence runs (dates shown per card) — they don't change on every push;
-    only the "Latest CI smoke run" card does.
+    ✅ CI passing as of the latest push. The 5 tier reports below are fixed
+    evidence runs (dates shown per card) — they don't change on every push;
+    only the "Latest CI run" card does.
   </div>
+
+  <h2>Findings at a glance</h2>
+  <table>
+    <thead><tr><th>Tier</th><th>Users</th><th>Error rate</th><th>P95</th><th>Throughput</th></tr></thead>
+    <tbody>
+      <tr><td>Baseline</td><td class="num">50</td><td class="num">0%</td><td class="num">71ms</td><td class="num">10.9 req/s</td></tr>
+      <tr><td>Load-Medium</td><td class="num">150</td><td class="num">23.56%</td><td class="num">6.1s</td><td class="num">30.3 req/s</td></tr>
+      <tr><td>Load-Peak</td><td class="num">300</td><td class="num">59.97%</td><td class="num">8.9s</td><td class="num">30.0 req/s</td></tr>
+      <tr><td>Stress</td><td class="num">500</td><td class="num">39.81%</td><td class="num">17.6s</td><td class="num">26.9 req/s</td></tr>
+      <tr><td>Endurance</td><td class="num">150</td><td class="num">0.01%</td><td class="num">7.6s</td><td class="num">24.5 req/s</td></tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead><tr><th>Brief's goal</th><th>Target</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Response time</td><td class="num">&lt; 2s</td><td class="verdict-not-met">Not met at 150+ concurrent</td></tr>
+      <tr><td>Throughput</td><td class="num">500 req/s</td><td class="verdict-not-met">Not met — peaks ~30 req/s</td></tr>
+      <tr><td>Error rate</td><td class="num">&le; 1%</td><td class="verdict-not-met">Not met (Load/Stress) — <span class="verdict-met">met at Endurance</span></td></tr>
+      <tr><td>Scalability</td><td class="num">—</td><td>Informative, not conclusive</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lede" style="margin-top:1rem; font-size:0.9rem;">
+    None of this is an application bug — the app's own server logs show zero
+    errors on every run. The failures trace to the test generator's own
+    TCP port/connection limits under sustained concurrency, diagnosed down
+    to the exact exception type in
+    <a href="https://github.com/nellybutera/swaglabs-performance-testing/blob/main/FINAL_REPORT.md">FINAL_REPORT.md</a>.
+  </p>
 
   <h2>Evidence tier reports</h2>
   <div class="grid">
@@ -73,39 +114,48 @@
     </a>
     <a class="card" href="reports/load-medium/">
       <span><span class="tier">Load — Medium</span>
-      <span class="desc">150 concurrent, 5 min steady-state — 8.4% errors</span></span>
+      <span class="desc">150 concurrent, 5 min steady-state — 23.56% errors</span></span>
       <span class="when">14 Aug, 11:53–11:59</span>
     </a>
     <a class="card" href="reports/load-peak/">
       <span><span class="tier">Load — Peak</span>
-      <span class="desc">300 concurrent, 5 min steady-state — 30.2% errors</span></span>
+      <span class="desc">300 concurrent, 5 min steady-state — 59.97% errors</span></span>
       <span class="when">14 Aug, 12:00–12:06</span>
     </a>
     <a class="card" href="reports/stress/">
       <span><span class="tier">Stress</span>
-      <span class="desc">500 concurrent, 5 min steady-state — 21.5% errors</span></span>
+      <span class="desc">500 concurrent, 5 min steady-state — 39.81% errors</span></span>
       <span class="when">14 Aug, 12:14–12:19</span>
     </a>
     <a class="card" href="reports/endurance/">
       <span><span class="tier">Endurance</span>
-      <span class="desc">150 concurrent, 10 min — 0.003% errors, no memory leak found</span></span>
+      <span class="desc">150 concurrent, 10 min — 0.01% errors, no memory leak found</span></span>
       <span class="when">14 Aug, 12:20–12:30</span>
     </a>
-    <a class="card" href="reports/smoke-real-site/">
-      <span><span class="tier">Smoke — real saucedemo.com</span>
-      <span class="desc">5 users — caught a real routing divergence, see TEST_PLAN.md §4</span></span>
+  </div>
+  <p class="smoke-note">
+    Separately: a <strong>functional smoke check against the real
+    saucedemo.com</strong> (5 users, not a performance tier) —
+    <a class="card" href="reports/smoke-real-site/" style="display:inline-flex; margin-top:0.5rem;">
+      <span><span class="tier">Smoke — real site</span>
+      <span class="desc">Caught a real routing divergence — see TEST_PLAN.md §4</span></span>
       <span class="when">13 Aug, 11:11–11:12</span>
     </a>
-  </div>
+  </p>
 
-  <h2>Continuous check</h2>
+  <h2>Pipeline</h2>
   <div class="grid">
     <a class="card" href="ci-smoke/">
-      <span><span class="tier">Latest CI smoke run</span>
-      <span class="desc">Baseline tier, rebuilt and re-run on every push to main</span></span>
+      <span><span class="tier">Latest CI run</span>
+      <span class="desc">Baseline tier, rebuilt and re-run on every push — gated on the brief's own SLA (P95 &lt; 2s, error rate &le; 1%)</span></span>
       <span class="when">always current</span>
     </a>
   </div>
+  <p class="smoke-note">
+    Also runs weekly against Load-Medium, and any tier can be triggered
+    on demand from the
+    <a href="https://github.com/nellybutera/swaglabs-performance-testing/actions">Actions tab</a>.
+  </p>
 
   <h2>Live Grafana monitoring</h2>
   <div class="grafana-note">
@@ -118,10 +168,9 @@
 
   <footer>
     Built by <a href="https://github.com/nellybutera">nellybutera</a> &middot;
-    no Allure here — see the
+    see the
     <a href="https://github.com/nellybutera/swaglabs-performance-testing#readme">README</a>
-    for why plain JMeter HTML reports + Grafana fit a performance test better than
-    a functional-test reporting tool.
+    for full methodology, the JMeter test plan structure, and assertions used.
   </footer>
 </body>
 </html>
