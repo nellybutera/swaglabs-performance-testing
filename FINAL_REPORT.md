@@ -217,8 +217,9 @@ is continuous time-series metrics, not per-test pass/fail — see `TEST_PLAN.md`
 - `reports/<tier>/index.html` — HTML dashboard per run
 - `EVIDENCE_CHECKSUMS.txt` — SHA-256 of every raw `.jtl`
 - `.github/workflows/performance-smoke.yml` — CI: baseline-scale run on every
-  push, plus an on-demand `workflow_dispatch` to run any tier and gate on the
-  brief's own SLA (P95 < 2s, error rate ≤ 1%)
+  push, a weekly scheduled Load-Medium run, and an on-demand `workflow_dispatch`
+  to run any tier — all gated on the brief's own SLA (P95 < 2s, error rate ≤ 1%)
+  and summarized on the run's own summary page
 - `app-under-test/` — vendored Swag Labs source + serving Dockerfile/nginx config
 - `docker-compose.yml`, `grafana/` — live monitoring stack
 - `grafana-dashboard.png` — screenshot of the working dashboard

@@ -1,5 +1,7 @@
 # Swag Labs Performance Testing
 
+[![Performance smoke test](https://github.com/nellybutera/swaglabs-performance-testing/actions/workflows/performance-smoke.yml/badge.svg)](https://github.com/nellybutera/swaglabs-performance-testing/actions/workflows/performance-smoke.yml)
+
 JMeter load testing of [Swag Labs](https://www.saucedemo.com/) — an AmaliTech
 Training Academy Performance Testing
 lab assignment.
@@ -31,7 +33,7 @@ five flows the brief asks for (login, search, product details, cart, checkout).
 | `EVIDENCE_CHECKSUMS.txt` | Checksums so the raw result files can be verified |
 | `app-under-test/` | A local copy of Swag Labs + the Docker setup to run it |
 | `docker-compose.yml`, `grafana/` | Optional: watch metrics live in Grafana while a test runs |
-| `.github/workflows/` | CI — runs a baseline smoke test on every push (gated on the brief's own P95/error-rate SLA), publishes reports to GitHub Pages, and can run any tier on demand from the Actions tab |
+| `.github/workflows/` | CI — baseline smoke test on every push (gated on the brief's own P95/error-rate SLA), a weekly scheduled Load-Medium run, any tier on demand from the Actions tab, and results summarized on each run's own summary page |
 
 **No Allure here.** My other repos use Allure for functional tests (pass/fail
 per test case), but a performance test produces a stream of numbers over time,

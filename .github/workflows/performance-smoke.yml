@@ -10,8 +10,13 @@ name: Performance smoke test
 # numbers as a pipeline smoke check, not a substitute for the local evidence
 # runs.
 #
+# schedule: a weekly Load-Medium run, so heavier load coverage happens on a
+# cadence instead of on every commit (which would slow every push for no
+# benefit, given the shared-runner caveat above) or never.
+#
 # Either trigger gates on the brief's own SLA (P95 < 2s, error rate <= 1%),
-# not just "did any request fail."
+# not just "did any request fail" -- summarized on the run's own summary page,
+# not just buried in the log.
 #
 # On push to main, also publishes reports/ + the fresh CI report to GitHub
 # Pages alongside pages/index.html. Plain JMeter HTML reports, not Allure --
@@ -22,6 +27,8 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC -- weekly Load-Medium coverage
   workflow_dispatch:
     inputs:
       tier:
@@ -35,6 +42,10 @@ on:
           - load-peak
           - stress
           - endurance
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -50,10 +61,15 @@ jobs:
       - name: Pick tier for this run
         id: tier
         run: |
-          # push/PR always stays smoke-scale; workflow_dispatch can pick any tier.
-          TIER="${{ github.event.inputs.tier || 'baseline' }}"
+          # push/PR stays smoke-scale; schedule runs the weekly load check;
+          # workflow_dispatch can pick any tier.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            TIER="load-medium"
+          else
+            TIER="${{ github.event.inputs.tier || 'baseline' }}"
+          fi
           echo "tier=$TIER" >> "$GITHUB_OUTPUT"
-          echo "Running tier: $TIER"
+          echo "Running tier: $TIER (trigger: ${{ github.event_name }})"
 
       - name: Build load-test target image
         run: docker build -f app-under-test/Dockerfile.perf -t swaglabs-perf-target ./app-under-test
@@ -83,18 +99,32 @@ jobs:
       - name: Check SLA gate (P95 < 2s, error rate <= 1%)
         run: |
           python3 - <<'EOF'
-          import json, sys
+          import json, os, sys
+
           d = json.load(open("ci-report/statistics.json"))["Total"]
-          p95 = d["pct2ResTime"]
+          tier = "${{ steps.tier.outputs.tier }}"
+          trigger = "${{ github.event_name }}"
+          samples = d["sampleCount"]
           err_pct = d["errorPct"]
-          print(f"samples={d['sampleCount']} errorPct={err_pct:.3f}% p95={p95:.0f}ms")
-          failed = False
-          if err_pct > 1.0:
-              print(f"FAIL: error rate {err_pct:.3f}% exceeds brief's 1% target")
-              failed = True
-          if p95 > 2000:
-              print(f"FAIL: P95 {p95:.0f}ms exceeds brief's 2000ms target")
-              failed = True
+          p95 = d["pct2ResTime"]
+
+          err_fail = err_pct > 1.0
+          p95_fail = p95 > 2000
+          failed = err_fail or p95_fail
+          verdict = "FAIL" if failed else "PASS"
+
+          print(f"samples={samples} errorPct={err_pct:.3f}% p95={p95:.0f}ms -> {verdict}")
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+              with open(summary_path, "a", encoding="utf-8") as f:
+                  f.write(f"## Performance SLA gate -- {tier} ({trigger})\n\n")
+                  f.write("| Metric | Result | Target | |\n|---|---|---|---|\n")
+                  f.write(f"| Samples | {samples} | -- | |\n")
+                  f.write(f"| Error rate | {err_pct:.3f}% | <= 1% | {'❌' if err_fail else '✅'} |\n")
+                  f.write(f"| P95 response time | {p95:.0f}ms | < 2000ms | {'❌' if p95_fail else '✅'} |\n\n")
+                  f.write(f"**Overall: {verdict}**\n")
+
           sys.exit(1 if failed else 0)
           EOF
 
