@@ -26,12 +26,12 @@ five flows the brief asks for (login, search, product details, cart, checkout).
 |---|---|
 | `TEST_PLAN.md` | How the tests were designed, and why |
 | `FINAL_REPORT.md` | The results |
-| `jmeter/tier-*.jmx` | The 5 test plans — baseline, load, stress, endurance, and a smoke test against the real site |
+| `jmeter/tier-*.jmx` | The 6 test plans — baseline, load-medium (150 users), load-peak (300 users), stress, endurance, and a smoke test against the real site |
 | `reports/<tier>/` | HTML dashboard for each run |
 | `EVIDENCE_CHECKSUMS.txt` | Checksums so the raw result files can be verified |
 | `app-under-test/` | A local copy of Swag Labs + the Docker setup to run it |
 | `docker-compose.yml`, `grafana/` | Optional: watch metrics live in Grafana while a test runs |
-| `.github/workflows/` | CI — runs a quick smoke test on every push and publishes the reports to GitHub Pages |
+| `.github/workflows/` | CI — runs a baseline smoke test on every push (gated on the brief's own P95/error-rate SLA), publishes reports to GitHub Pages, and can run any tier on demand from the Actions tab |
 
 **No Allure here.** My other repos use Allure for functional tests (pass/fail
 per test case), but a performance test produces a stream of numbers over time,

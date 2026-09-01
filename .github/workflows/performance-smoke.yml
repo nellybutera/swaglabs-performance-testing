@@ -1,22 +1,51 @@
 name: Performance smoke test
 
-# Smoke-level only, deliberately. See TEST_PLAN.md section 8: a shared GitHub
-# Actions runner cannot produce meaningful load/stress/endurance numbers (no control
-# over neighboring load, CPU/network throttling), so this pipeline runs the baseline
-# tier only (50 users, 1 iteration, ~15s) against a freshly built copy of the target,
-# purely as a regression check that the app still builds, serves, and the .jmx still
-# runs clean. The real load/stress/endurance numbers in FINAL_REPORT.md come from
-# local runs, documented with checksums in EVIDENCE_CHECKSUMS.txt.
+# Two ways this runs:
 #
-# On push to main, this also publishes the committed HTML dashboards (reports/) plus
-# the fresh CI smoke-run report to GitHub Pages, alongside a small landing page
-# (pages/index.html). Plain JMeter HTML reports, not Allure -- see README.md for why.
+# 1. On every push/PR to main: baseline tier only (50 users, 1 iteration, ~15s)
+#    against a freshly built copy of the target, as a regression check that the
+#    app still builds, serves, and the .jmx still runs clean -- NOT a load test.
+#    See TEST_PLAN.md section 8: a shared GitHub Actions runner cannot produce
+#    meaningful load/stress/endurance numbers (no control over neighboring load,
+#    CPU/network throttling), so this path deliberately stays smoke-scale. The
+#    real load/stress/endurance numbers in FINAL_REPORT.md come from local runs,
+#    documented with checksums in EVIDENCE_CHECKSUMS.txt.
+#
+# 2. On-demand (Actions tab -> "Run workflow"): pick any tier to actually
+#    execute in the pipeline and gate the build on it -- this is what makes
+#    "performance tests run in the pipeline" literally true, not just "reports
+#    get published." The same shared-runner caveat from (1) applies here too:
+#    a manually-triggered load/stress/endurance run on this runner is a real
+#    pipeline execution and a real pass/fail gate, but its numbers still are
+#    not directly comparable to the local evidence runs -- same limitation,
+#    just opted into deliberately instead of avoided by default.
+#
+# Either way, the run is gated on the brief's own SLA (P95 < 2s, error rate
+# <= 1%), not just "did every request fail or not" -- see "Check SLA gate" below.
+#
+# On push to main, this also publishes the committed HTML dashboards (reports/)
+# plus the fresh CI run's own report to GitHub Pages, alongside a small landing
+# page (pages/index.html). Plain JMeter HTML reports, not Allure -- see
+# README.md for why.
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "Tier to run in this pipeline execution"
+        required: true
+        default: baseline
+        type: choice
+        options:
+          - baseline
+          - load-medium
+          - load-peak
+          - stress
+          - endurance
 
 permissions:
   contents: read
@@ -24,10 +53,18 @@ permissions:
   id-token: write
 
 jobs:
-  smoke:
+  run-tier:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Pick tier for this run
+        id: tier
+        run: |
+          # push/PR always stays smoke-scale; workflow_dispatch can pick any tier.
+          TIER="${{ github.event.inputs.tier || 'baseline' }}"
+          echo "tier=$TIER" >> "$GITHUB_OUTPUT"
+          echo "Running tier: $TIER"
 
       - name: Build load-test target image
         run: docker build -f app-under-test/Dockerfile.perf -t swaglabs-perf-target ./app-under-test
@@ -48,26 +85,36 @@ jobs:
           curl -sL https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz -o jmeter.tgz
           tar -xzf jmeter.tgz
 
-      - name: Run baseline tier (smoke-scale, see header comment)
+      - name: Run ${{ steps.tier.outputs.tier }} tier
         run: |
-          apache-jmeter-5.6.3/bin/jmeter.sh -n -t jmeter/tier-baseline.jmx \
+          apache-jmeter-5.6.3/bin/jmeter.sh -n -t "jmeter/tier-${{ steps.tier.outputs.tier }}.jmx" \
             -l results-ci.jtl -j jmeter-ci.log \
-            -e -o ci-smoke-report
+            -e -o ci-report
 
-      - name: Fail on any request failure
+      - name: Check SLA gate (P95 < 2s, error rate <= 1%)
         run: |
-          if grep -q ',false,' results-ci.jtl; then
-            echo "Smoke test recorded failed requests:"
-            grep ',false,' results-ci.jtl
-            exit 1
-          fi
+          python3 - <<'EOF'
+          import json, sys
+          d = json.load(open("ci-report/statistics.json"))["Total"]
+          p95 = d["pct2ResTime"]
+          err_pct = d["errorPct"]
+          print(f"samples={d['sampleCount']} errorPct={err_pct:.3f}% p95={p95:.0f}ms")
+          failed = False
+          if err_pct > 1.0:
+              print(f"FAIL: error rate {err_pct:.3f}% exceeds brief's 1% target")
+              failed = True
+          if p95 > 2000:
+              print(f"FAIL: P95 {p95:.0f}ms exceeds brief's 2000ms target")
+              failed = True
+          sys.exit(1 if failed else 0)
+          EOF
 
       - name: Upload HTML dashboard (build artifact)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: jmeter-smoke-report
-          path: ci-smoke-report/
+          name: jmeter-${{ steps.tier.outputs.tier }}-report
+          path: ci-report/
 
       - name: Show target logs on failure
         if: failure()
@@ -80,7 +127,7 @@ jobs:
           cp pages/index.html site/
           cp grafana-dashboard.png site/
           cp -r reports site/reports
-          cp -r ci-smoke-report site/ci-smoke
+          cp -r ci-report site/ci-smoke
 
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -90,7 +137,7 @@ jobs:
 
   deploy-pages:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: smoke
+    needs: run-tier
     runs-on: ubuntu-latest
     environment:
       name: github-pages

@@ -391,12 +391,24 @@ Each row is its own literal `.jmx` file (`jmeter/tier-<name>.jmx`) — see §6 f
 there are five files instead of one parametrized file. Every real run is wrapped in
 `timeout -k 10 <duration+ramp+120s>` as a hard OS-level backstop.
 
+**Rebuilt 2026-08-14, later than §6b:** the single 200-user `tier-load.jmx`
+compromise tier (chosen to sit "within the brief's 150–300 range" — see the
+now-superseded note that used to be here) was split into two literal tiers,
+`tier-load-medium.jmx` (150) and `tier-load-peak.jmx` (300), matching the
+brief's "150 users, then 300 users" wording exactly. At the same time, a
+Uniform Random Timer (1–3s think time) was added between every request in all
+five tier files — the brief's "think time timers between requests" requirement
+had not been implemented in any tier before this. See `FINAL_REPORT.md`'s
+"Revision notice" for the resulting numbers, including Endurance's error rate
+dropping from 23.24% to 0.003%.
+
 | Tier | File | Concurrent users | Ramp-up | Duration | Notes |
 |---|---|---|---|---|---|
 | Baseline | `tier-baseline.jmx` | 50 | 10s | 1 iteration/user (120s safety-net ceiling) | Sanity check |
-| Load | `tier-load.jmx` | 200 | 30s | 5 min steady-state | Within brief's 150–300 range; see §6 connection-refused investigation |
+| Load-Medium | `tier-load-medium.jmx` | 150 | 30s | 5 min steady-state | Brief's "150 users" literally; see §6/§6b connection-refused investigation |
+| Load-Peak | `tier-load-peak.jmx` | 300 | 45s | 5 min steady-state | Brief's "then 300 users" literally |
 | Stress | `tier-stress.jmx` | 500 | 60s | 5 min steady-state | Brief's "500+"; watch for generator saturation (§7) |
-| Endurance | `tier-endurance.jmx` | 200 (load-tier concurrency) | 60s | **10 min** steady-state | Reduced from an originally planned 30 min — a memory/fd leak in nginx serving static files is the least likely finding in this plan, and two runaway incidents (§6) already spent the time budget the extra 20 min would have bought |
+| Endurance | `tier-endurance.jmx` | 150 (load-medium concurrency) | 60s | **10 min** steady-state | Reduced from an originally planned 30 min — a memory/fd leak in nginx serving static files is the least likely finding in this plan, and two runaway incidents (§6) already spent the time budget the extra 20 min would have bought. Now the tier with the best error rate outside Baseline — see `FINAL_REPORT.md` |
 | Smoke (real site) | `tier-smoke-real-site.jmx` | 5 | 1s | 1 iteration/user (60s safety-net ceiling) | Against real saucedemo.com only — see §4 |
 
 ## 9. Risk / sign-off

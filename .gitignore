@@ -19,3 +19,7 @@ temp/
 # connection-pool-exhaustion test in TEST_PLAN.md section 6b) -- large, not
 # evidence, never intentionally produced
 *.hprof
+
+# JMeter's own run log, written to the current working directory whenever it's
+# invoked without an explicit -j <file> -- scratch/ad-hoc runs only, not evidence
+/jmeter.log

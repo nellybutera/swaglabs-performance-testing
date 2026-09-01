@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Swag Labs - Endurance (200 users, 10 min steady-state)" enabled="true">
-      <stringProp name="TestPlan.comments">Endurance tier. 200 concurrent users (load-tier concurrency), 60s ramp, 600s
-(10 min) steady-state, against the local Docker target. Reduced from an originally
-planned 30 minutes: a memory/fd leak in nginx serving static files is the least likely
-finding in this whole plan, and two runaway incidents already spent the time budget
-this tier's extra duration would have bought. See TEST_PLAN.md section 8. This file's
-Thread Group values are literal, not parametrized -- see the Loop Controller and
-scheduler comments below for why.</stringProp>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Swag Labs - Endurance (150 users, 10 min steady-state)" enabled="true">
+      <stringProp name="TestPlan.comments">Endurance tier. 150 concurrent users (the brief's Medium Load concurrency,
+sustained -- chosen over Peak/Stress concurrency so this tier tests duration,
+not the same concurrency ceiling already tested elsewhere), 60s ramp, 600s
+(10 min) steady-state, against the local Docker target. Reduced from an
+originally planned 30 minutes: a memory/fd leak in nginx serving static files
+is the least likely finding in this whole plan, and this project's schedule
+already spent significant time on generator-bottleneck diagnosis (section 6b).
+See TEST_PLAN.md section 8. This file's Thread Group values are literal, not
+parametrized -- see the Loop Controller and scheduler comments below for why.</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -70,7 +72,7 @@ scheduler comments below for why.</stringProp>
           <boolProp name="LoopController.continue_forever">false</boolProp>
           <stringProp name="LoopController.loops">-1</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">200</stringProp>
+        <stringProp name="ThreadGroup.num_threads">150</stringProp>
         <stringProp name="ThreadGroup.ramp_time">60</stringProp>
         <!-- scheduler is a boolProp: unlike stringProp, JMeter's BooleanProperty does
              NOT evaluate dollar-brace-P function syntax, it parses the raw literal
@@ -113,6 +115,20 @@ scheduler comments below for why.</stringProp>
               <intProp name="Assertion.test_type">8</intProp>
             </ResponseAssertion>
             <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
+            </ResponseAssertion>
+            <hashTree/>
           </hashTree>
         </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="02 Inventory (product search)" enabled="true">
@@ -140,6 +156,20 @@ scheduler comments below for why.</stringProp>
               <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
               <boolProp name="Assertion.assume_success">false</boolProp>
               <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
             </ResponseAssertion>
             <hashTree/>
           </hashTree>
@@ -171,6 +201,20 @@ scheduler comments below for why.</stringProp>
               <intProp name="Assertion.test_type">8</intProp>
             </ResponseAssertion>
             <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
+            </ResponseAssertion>
+            <hashTree/>
           </hashTree>
         </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="04 Cart" enabled="true">
@@ -200,6 +244,20 @@ scheduler comments below for why.</stringProp>
               <intProp name="Assertion.test_type">8</intProp>
             </ResponseAssertion>
             <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
+            </ResponseAssertion>
+            <hashTree/>
           </hashTree>
         </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="05 Checkout Step One" enabled="true">
@@ -227,6 +285,20 @@ scheduler comments below for why.</stringProp>
               <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
               <boolProp name="Assertion.assume_success">false</boolProp>
               <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
             </ResponseAssertion>
             <hashTree/>
           </hashTree>

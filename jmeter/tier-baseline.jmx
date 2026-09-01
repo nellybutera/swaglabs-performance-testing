@@ -2,10 +2,10 @@
 <jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
   <hashTree>
     <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Swag Labs - Baseline (50 users, 1 iteration)" enabled="true">
-      <stringProp name="TestPlan.comments">Baseline tier. 50 users, 1 iteration each (no steady-state hold), against the
-local Docker target. See TEST_PLAN.md section 8. This file's Thread Group values are
-literal, not parametrized -- see the Loop Controller and scheduler comments below for
-why: two separate infinite-loop bugs came from parametrizing exactly these fields.</stringProp>
+      <stringProp name="TestPlan.comments">Baseline tier -- Light Load per the brief's phase spec. 50 users, 1 iteration
+each (no steady-state hold), against the local Docker target. See TEST_PLAN.md
+section 8. This file's Thread Group values are literal, not parametrized -- see
+the Loop Controller and scheduler comments below for why.</stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -110,6 +110,20 @@ why: two separate infinite-loop bugs came from parametrizing exactly these field
               <intProp name="Assertion.test_type">8</intProp>
             </ResponseAssertion>
             <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
+            </ResponseAssertion>
+            <hashTree/>
           </hashTree>
         </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="02 Inventory (product search)" enabled="true">
@@ -137,6 +151,20 @@ why: two separate infinite-loop bugs came from parametrizing exactly these field
               <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
               <boolProp name="Assertion.assume_success">false</boolProp>
               <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
             </ResponseAssertion>
             <hashTree/>
           </hashTree>
@@ -168,6 +196,20 @@ why: two separate infinite-loop bugs came from parametrizing exactly these field
               <intProp name="Assertion.test_type">8</intProp>
             </ResponseAssertion>
             <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
+            </ResponseAssertion>
+            <hashTree/>
           </hashTree>
         </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="04 Cart" enabled="true">
@@ -197,6 +239,20 @@ why: two separate infinite-loop bugs came from parametrizing exactly these field
               <intProp name="Assertion.test_type">8</intProp>
             </ResponseAssertion>
             <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
+            </ResponseAssertion>
+            <hashTree/>
           </hashTree>
         </hashTree>
         <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="05 Checkout Step One" enabled="true">
@@ -224,6 +280,20 @@ why: two separate infinite-loop bugs came from parametrizing exactly these field
               <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
               <boolProp name="Assertion.assume_success">false</boolProp>
               <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <UniformRandomTimer guiclass="UniformRandomTimerGui" testclass="UniformRandomTimer" testname="Think time (1-2s)" enabled="true">
+              <stringProp name="ConstantTimer.delay">1000</stringProp>
+              <stringProp name="RandomTimer.range">1000.0</stringProp>
+            </UniformRandomTimer>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert page title text" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="title">&lt;title&gt;Swag Labs&lt;/title&gt;</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">false</boolProp>
+              <intProp name="Assertion.test_type">16</intProp>
             </ResponseAssertion>
             <hashTree/>
           </hashTree>

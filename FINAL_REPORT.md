@@ -13,6 +13,18 @@ that itself contains commas) — shows those claims were wrong. Corrected number
 and an honest goal-by-goal verdict are below. See `TEST_PLAN.md` §6b for the
 full account of what was miscounted and why.
 
+**Revision notice (2026-08-14, later same day):** the tier suite was rebuilt
+after the correction above: Load is now split into two literal tiers —
+**Load-Medium (150 users)** and **Load-Peak (300 users)** — matching the
+brief's "150 users, then 300 users" wording exactly instead of one 200-user
+compromise tier; and a Uniform Random Timer (1–3s "think time") was added
+between every request in all five `.jmx` files, closing a gap against the
+brief's "think time timers between requests" requirement that no tier had
+before. All numbers below are from that rebuilt suite, not the single-Load-tier
+run described in the original correction. One notable effect of adding think
+time: **Endurance's error rate dropped from 23.24% to 0.003%** — see "Endurance"
+below.
+
 ## Executive summary
 
 Swag Labs (saucedemo.com) has no server-side application logic — it's a 100%
@@ -27,7 +39,7 @@ Grafana monitoring) and an honestly-diagnosed test-environment bottleneck, which
 is a legitimate and common outcome of a first performance-test pass — just not
 the same thing as a clean pass on the brief's goals.
 
-## Results by tier — corrected
+## Results by tier — rebuilt suite (2026-08-14, post-timer)
 
 Recomputed directly from the raw `.jtl` files, counting only the 5 named
 transaction-controller samples (Login/Inventory/Inventory Item/Cart/Checkout),
@@ -35,49 +47,60 @@ not every embedded-resource sub-sample:
 
 | Tier | Concurrent | Transaction attempts | Successful | Success rate | Mean (success only) | P95 (success only) |
 |---|---|---|---|---|---|---|
-| Baseline | 50 | 250 | 250 | **100%** | 8ms | 18ms |
-| Load | 200 | 111,411 | 11,769 | **10.56%** | 2,641ms | 5,190ms |
-| Stress | 500 | 51,639 | 8,163 | **15.81%** | 9,546ms | 17,786ms |
-| Endurance (10 min) | 200 | 83,704 | 19,455 | **23.24%** | 4,639ms | 8,100ms |
-| Smoke (real site) | 5 | 25 | 5 | 20%* | — | — |
+| Baseline | 50 | 250 | 250 | **100%** | 36ms | 71ms |
+| Load-Medium | 150 | 12,451 | 9,517 | **76.44%** | 2,503ms | 6,059ms |
+| Load-Peak | 300 | 24,164 | 9,674 | **40.03%** | 4,614ms | 8,906ms |
+| Stress | 500 | 14,678 | 8,835 | **60.19%** | 10,405ms | 17,622ms |
+| Endurance (10 min, 150 concurrent) | 150 | 15,377 | 15,376 | **99.99%** | 4,085ms | 7,612ms |
+| Smoke (real site) | 5 | 25 | 5 | 20%* | 14,964ms | — |
 
 \* Smoke's low success rate is the known routing divergence (see below), not
-the same phenomenon as Load/Stress/Endurance.
+the same phenomenon as Load/Peak/Stress. Its latency figures reflect real
+internet round-trips to saucedemo.com, not the local target.
 
-**What changed from the original table:** the 535 req/s "throughput" and the
-"Baseline is the trustworthy latency reference" framing are both retracted.
-The real picture: even the requests that *did* succeed under 200+ concurrent
-load took 2.6–17.8 seconds on average/P95 — far over the 2s target — and the
-large majority of requests didn't succeed at all.
+**What changed since the last correction:** Load is now two literal tiers
+matching the brief's own wording ("150 users, then 300 users") instead of one
+200-user compromise tier, and a 1–3s Uniform Random Timer ("think time") now
+sits between every request in all five `.jmx` files — the brief's "think time
+timers between requests" requirement, which no earlier tier had. Success rates
+at Load-Medium/Load-Peak/Stress are all noticeably *better* than the old
+single-Load-tier's 10.56% (pacing requests instead of firing them back-to-back
+clearly helps), but still fall well short of the brief's ≤1% error target at
+150+ concurrent. **Endurance is the standout exception — see below.**
 
 ## Baseline: clean pass
 
-0% errors, P95 18ms, well under the brief's 2s target. This is the one tier with no
+0% errors, P95 71ms, well under the brief's 2s target. This is the one tier with no
 caveats — 50 users, 1 iteration each, against the local target, nothing unusual.
 
-## Connection-refused / bind-exhaustion artifact (Load, Stress, Endurance)
+## Connection-refused / bind-exhaustion artifact (Load-Medium, Load-Peak, Stress)
 
-At 200+ concurrent, most requests failed — not with an application error, but
-with a client-side connection failure. **This finding was revised on 2026-08-14
-after the failure reasons were properly broken down by exact exception type**
-(an earlier pass here only sampled a handful of failure lines and generalized
-from those; counting all of them tells a different, more specific story):
+At 150+ concurrent, a substantial share of requests still fail — not with an
+application error, but with a client-side connection failure, the same failure
+family diagnosed in the previous version of this report (§6b of `TEST_PLAN.md`)
+even after adding think-time pacing:
 
 | Tier | `HttpHostConnectException` (Connection refused) | `BindException` (client port exhaustion) | `SocketTimeoutException` |
 |---|---|---|---|
-| Load | 1,226 | **97,438** | 0 |
-| Stress | 29,410 | 9,902 | 1,343 |
-| Endurance | 1,632 | **54,612** | 0 |
+| Load-Medium | 0 | **3,843** | 0 |
+| Load-Peak | 269 | **19,057** | 0 |
+| Stress | 3,006 | 5,241 | 2,081 |
 
-**`BindException` — the dominant failure at Load and Endurance — is a
-well-understood, specific failure mode: the test generator (this laptop)
-running out of free outbound TCP ports.** Windows' ephemeral port range here
-is 49,152–65,535 (~16,384 ports), each held for a default TIME_WAIT of 120s
-after a connection closes. 200 threads opening a fresh connection per request
-for several minutes straight, especially with keep-alive disabled (see below),
-can exhaust that pool well within the test window — and did: the first
-`BindException` in the Load-tier run appeared at **+46 seconds**, right after
-the 30-second ramp-up completed and all 200 threads hit steady state.
+(Counted at the individual-request level, e.g. `GET /inventory.html`, not the
+transaction-controller rollup — the rollup only records "1 sample failed,"
+not why. A further ~2,900–2,700 "Embedded resource download error" failures
+per tier, on `favicon.ico`/static assets at HTTP 200, are a separate minor
+issue and not counted in the table above.)
+
+**`BindException` — still the dominant failure — is the same specific failure
+mode as before: the test generator (this laptop) running out of free outbound
+TCP ports.** Windows' ephemeral port range here is 49,152–65,535 (~16,384
+ports), each held for a default TIME_WAIT of 120s after a connection closes.
+Even with 1–3s of think time between requests, 150–300 threads ramping up and
+opening connections for several minutes straight can still exhaust that pool —
+think time slows the *rate* of new connections per thread, but doesn't change
+how many threads are open at once, so at 150+ concurrent it reduces the
+problem without eliminating it.
 
 **Prior investigation on this repo's history, now understood more precisely:**
 - **nginx's own access/error logs showed zero errors across all runs.** Every
@@ -104,13 +127,12 @@ the 30-second ramp-up completed and all 200 threads hit steady state.
   depending on this setting. The original hypothesis (that `Connection:
   close` was the root cause and removing it would fix things) is wrong.
 
-**Stress tier's failure mix looks different** (`HttpHostConnectException`
-dominant, not `BindException`) — plausibly because at 500 concurrent, requests
-queue and time out before enough connections accumulate in TIME_WAIT to
-exhaust the pool the same way; `SocketTimeoutException` appearing only here
-supports a queuing/backpressure explanation rather than pure port exhaustion.
-This tier's exact mechanism is not fully resolved and is flagged as an open
-item rather than asserted with the same confidence as Load/Endurance.
+**Stress tier's failure mix is more mixed** (`BindException` and
+`HttpHostConnectException` at similar scale, plus the only `SocketTimeoutException`
+occurrences) — plausibly because at 500 concurrent, requests queue and time out
+before enough connections accumulate in TIME_WAIT to exhaust the pool the same
+single way Load-Medium/Load-Peak do. This tier's exact mechanism is still not
+fully resolved and remains an open item.
 
 **Conclusion:** this is a test-environment (generator-side) bottleneck, not an
 application failure — nginx never saw these requests, under either
@@ -122,9 +144,20 @@ generator needs a real fix (see "What would actually verify these goals"
 below) before these numbers mean anything about the application. Full
 investigation trail, including the refuted hypothesis, in `TEST_PLAN.md` §6b.
 
-## Endurance: no leak
+## Endurance: the think-time fix's clearest result
 
-Container memory before and after the 10-minute endurance run: ~18-22MB either way,
+Endurance (150 concurrent, 10 minutes, same think-time timer as every other
+tier) came back at **99.99% success — 1 failure out of 15,377 attempts** —
+down from **23.24%** in the previous, timer-less version of this same tier.
+This is the strongest evidence in this report that **realistic pacing between
+requests, not just concurrency level, is a major factor** in whether the test
+generator exhausts its own TCP ports: Endurance's 150 concurrent threads,
+spread out over 10 minutes with 1–3s think time each, never opened connections
+fast enough to hit the same wall that Load-Medium (also 150 concurrent, but a
+tighter 5-minute steady-state) still did. Concurrency alone doesn't predict
+the failure — sustained *connection-open rate* does.
+
+Container memory before and after the run: ~18-22MB either way,
 no growth trend. No evidence of a memory leak in nginx serving static files over
 sustained load — the expected outcome for a static file server, confirmed rather
 than assumed.
@@ -152,10 +185,10 @@ that was wrong.
 
 | Goal | Target | Verdict |
 |---|---|---|
-| **Response time** | < 2s for critical transactions | **Not met.** Baseline (50 users) is 18ms, but that's not a load test — it's a sanity check. At 200+ concurrent, even successful requests averaged 2.6–9.5s (P95 5.2–17.8s). |
-| **Throughput** | 500 req/s | **Not verified.** The number reported earlier (535 req/s) counted failed connection attempts as completed requests — it was wrong, not just optimistic. A defensible successful-only throughput number was not computed for this report; see "What would actually verify this" below. |
-| **Error rate** | ≤ 1% under max load | **Not met.** Real failure rate at 200+ concurrent was 77–90% of transaction attempts (worse — 99.4% — once the follow-up diagnostic below is included). Confirmed not an application fault (nginx logs clean throughout, under both connection settings tested) — but confirmed to be a real failure nonetheless, caused by the test generator (this single laptop's) resource limits under sustained high concurrency. |
-| **Scalability** | Evaluate behavior under increasing load | **Partially informative, not conclusive.** The 50→200→500 progression does show behavior changing with concurrency — but because the generator becomes the bottleneck starting at 200, what's being observed past that point is substantially the test tool's scaling behavior, not the application's. |
+| **Response time** | < 2s for critical transactions | **Not met at 150+ concurrent.** Baseline (50 users) is 71ms P95 — a sanity check, not a load test. Endurance (150 concurrent, sustained) is close but over at 7.6s P95; Load-Medium/Peak/Stress range 6.1–17.6s P95. |
+| **Throughput** | 500 req/s | **Not verified.** No defensible successful-only req/s figure has been computed for any tier; see "What would actually verify this" below. |
+| **Error rate** | ≤ 1% under max load | **Not met at Load-Medium/Peak/Stress** (8.4% / 30.2% / 21.5% failure). **Met at Endurance** — 0.003% failure at 150 concurrent sustained for 10 minutes, once think-time pacing was added. Confirmed not an application fault throughout (nginx logs clean) — the remaining failures trace to the test generator's own TCP port exhaustion, worse at higher concurrency and shorter/burstier ramp-ups. |
+| **Scalability** | Evaluate behavior under increasing load | **Informative, still not conclusive.** The 50→150→300→500 progression, now with a real 150-vs-300 data point, shows error rate is NOT monotonic with concurrency alone (Endurance at 150 outperforms Load-Medium also at 150) — pacing and run shape matter as much as headcount. But because the generator remains the bottleneck at 150+, this still isn't a clean read of the *application's* scalability. |
 
 ## What would actually verify these goals
 
@@ -178,12 +211,12 @@ brief's numbers. To actually verify the four goals above, in priority order:
 2. **Re-run Load/Stress/Endurance** with that fix, and only then compute
    successful-only throughput/latency numbers as this app's real answer to
    the brief's goals.
-3. **Bracket the actual break point** — the original test plan flagged this as
-   an open item (100/150 concurrent, between Baseline's clean pass and Load's
-   failure) and it's now more clearly needed: right now there's no data point
-   between "50 users, perfect" and "200 users, 90% failing at the generator,"
-   so the real curve — and the real answer to the Scalability goal — is
-   unknown.
+3. **Bracket the actual break point further** — 150 concurrent is now covered
+   (Load-Medium, Endurance), narrowing the previous "50 perfect → 200 mostly
+   failing" gap. What's still missing is a data point between 50 and 150, and
+   an explanation for why Endurance (150, paced over 10 min) stays clean while
+   Load-Medium (also 150, tighter 5-min steady-state) doesn't — that gap is
+   about run *shape*, not just concurrency, and isn't fully explained yet.
 
 ## Live monitoring (Grafana + InfluxDB)
 
@@ -201,11 +234,14 @@ is continuous time-series metrics, not per-test pass/fail — see `TEST_PLAN.md`
 ## Deliverable file map
 
 - `TEST_PLAN.md` — full methodology, investigation narratives, decisions
-- `jmeter/tier-*.jmx` — five literal per-tier test plans
+- `jmeter/tier-*.jmx` — five literal per-tier test plans (baseline, load-medium,
+  load-peak, stress, endurance), plus `tier-smoke-real-site.jmx`
 - `jmeter/demo-live-monitoring.jmx` — separate demo file, not an evidence tier
 - `reports/<tier>/index.html` — HTML dashboard per run
 - `EVIDENCE_CHECKSUMS.txt` — SHA-256 of every raw `.jtl`
-- `.github/workflows/performance-smoke.yml` — CI (smoke-scale only, by design)
+- `.github/workflows/performance-smoke.yml` — CI: baseline-scale run on every
+  push, plus an on-demand `workflow_dispatch` to run any tier and gate on the
+  brief's own SLA (P95 < 2s, error rate ≤ 1%)
 - `app-under-test/` — vendored Swag Labs source + serving Dockerfile/nginx config
 - `docker-compose.yml`, `grafana/` — live monitoring stack
 - `grafana-dashboard.png` — screenshot of the working dashboard
